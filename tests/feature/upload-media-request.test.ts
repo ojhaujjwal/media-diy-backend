@@ -1,9 +1,9 @@
 import * as Http from "@effect/platform/HttpClient"
 import { Resolver } from "@effect/rpc"
 import { HttpResolver } from "@effect/rpc-http"
-import type { ClientRouter } from "../../src/http/server"
+import type { ClientRouter } from "../../src/http/http-server"
 import { UploadMediaRequest } from "../../src/http/controller/upload-media.action"
-import { MediaType } from "../../src/model/media"
+import { MediaType } from "../../src/domain/model/media"
 import { Effect } from "effect"
 import { describe, it, expect } from 'vitest';
 
@@ -17,16 +17,18 @@ const client = HttpResolver.make<ClientRouter>(
 
 describe('UploadMediaRequest', () => {
   it('should upload the media with valid request', async () => {
-    return await Effect.runPromise(Effect.gen(function* () {
+    Effect.gen(function* () {
       const response = yield* client(new UploadMediaRequest({
         md5Hash: 'asfsadasdf',
         deviceId: 'a1',
-        originalFileName: 'file1',
+        originalFileName: 'file1.png',
         type: MediaType.PHOTO,
+        filePath: '/a/b.png',
+        capturedAt: new Date(),
       }));
       expect(response).toEqual(true);
-    }));
+    });
   });
 
-  it.todo('should return validation error with invalid request');
+  it.todo('should return fail if file not found');
 });

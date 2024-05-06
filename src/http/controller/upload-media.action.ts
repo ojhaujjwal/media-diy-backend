@@ -1,11 +1,12 @@
 import { Schema as S } from "@effect/schema";
-import { MediaType } from "../../model/media";
+import { MediaType } from "../../domain/model/media";
 import { Rpc } from "@effect/rpc";
 import { Effect } from "effect";
+import { MediaContentsRepository } from "../../domain/repository/media-contents.repository";
 
 enum UPLOAD_MEDIA_ERROR_CODE {
   SERVER_ERROR = 'server_error',
-  VALIDATION_FAILURE = 'validation_failure',
+  MEDIA_NOT_FOUND = 'media_not_found',
 }
 
 class UploadMediaError extends S.Class<UploadMediaError>('UploadMediaError')({
@@ -17,7 +18,17 @@ export class UploadMediaRequest extends S.TaggedRequest<UploadMediaRequest>()('U
   originalFileName: S.String,
   type: S.Enums(MediaType),
   deviceId: S.String,
+  filePath: S.String,
+  capturedAt: S.Date,
 }) {}
 
 
-export const uploadMediaRouteHandler = Rpc.effect(UploadMediaRequest, () => Effect.succeed(true))
+export const uploadMediaRouteHandler = Rpc.effect(UploadMediaRequest, (request: UploadMediaRequest) => {
+  return MediaContentsRepository.pipe(
+    Effect.flatMap((repo) => repo.move(request.filePath, `/media/${request.md5Hash}`)),
+    Effect.flatMap(() => Effect.succeed(true)),
+    Effect.catchTag("MoveError", (moveError) =>
+      Effect.fail(new UploadMediaError({ errorCode: UPLOAD_MEDIA_ERROR_CODE.SERVER_ERROR })
+    )
+  ))
+})

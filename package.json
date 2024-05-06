@@ -7,7 +7,7 @@
   "scripts": {
     "test": "vitest",
     "build": "tsc",
-    "dev": "tsx src/http/server.ts"
+    "dev": "tsx src/http/run-server.ts"
   },
   "author": "",
   "license": "ISC",

@@ -14,7 +14,7 @@ const router = Router.make(
 export type ClientRouter = typeof router
 
 // Create the http server
-const HttpLive = Http.router.empty.pipe(
+export const HttpServer = Http.router.empty.pipe(
   Http.router.post("/rpc", HttpRouter.toHttpApp(router)),
   Http.server.serve(Http.middleware.logger),
   Http.server.withLogAddress,
@@ -24,8 +24,4 @@ const HttpLive = Http.router.empty.pipe(
       { port: process.env.SERVER_PORT ? parseInt(process.env.SERVER_PORT, 10) : 3000 }
     )
   )
-)
-
-Layer.launch(HttpLive).pipe(
-  NodeRuntime.runMain
 )
