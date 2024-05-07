@@ -4,7 +4,7 @@ import { HttpResolver } from "@effect/rpc-http"
 import type { ClientRouter } from "../../src/http/http-server"
 import { UploadMediaRequest } from "../../src/http/controller/upload-media.action"
 import { MediaType } from "../../src/domain/model/media"
-import { Effect } from "effect"
+import { Effect, Either, Option, identity } from "effect"
 import { describe, it, expect } from 'vitest';
 
 
@@ -17,18 +17,42 @@ const client = HttpResolver.make<ClientRouter>(
 
 describe('UploadMediaRequest', () => {
   it('should upload the media with valid request', async () => {
-    Effect.gen(function* () {
-      const response = yield* client(new UploadMediaRequest({
+    await Effect.runPromise(Effect.gen(function* () {
+      const failureOrSuccess = yield* client(new UploadMediaRequest({
         md5Hash: 'asfsadasdf',
         deviceId: 'a1',
         originalFileName: 'file1.png',
         type: MediaType.PHOTO,
-        filePath: '/a/b.png',
+        filePath: '/a/file1.png',
         capturedAt: new Date(),
-      }));
-      expect(response).toEqual(true);
-    });
+      })).pipe(Effect.either);
+
+      expect(Either.isRight(failureOrSuccess)).toEqual(true);
+    }));
   });
 
-  it.todo('should return fail if file not found');
+  it('should return fail if file not found', async () => {
+    await Effect.runPromise(Effect.gen(function* () {
+      const failureOrSuccess = yield* client(
+        new UploadMediaRequest({
+          md5Hash: 'asfsadasdf',
+          deviceId: 'a1',
+          originalFileName: 'file1.png',
+          type: MediaType.PHOTO,
+          filePath: '/a/file2.png',
+          capturedAt: new Date(),
+        })
+      ).pipe(Effect.either);
+
+      expect(Either.isLeft(failureOrSuccess)).toEqual(true);
+      
+      const error = Either.getLeft(failureOrSuccess);
+
+      if (!Option.isSome(error)) {
+        throw new Error('Error should be present');
+      }
+
+      expect(error.value.errorCode).toEqual('media_not_found');
+    }));
+  });
 });

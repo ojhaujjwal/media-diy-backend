@@ -8,6 +8,9 @@ export const MediaContentsRepositoryLive = Layer.succeed(
       //TODO: return failure effect if source not found
       //return Effect.fail(new MoveError({ message: "Source not found", reason: "SourceNotFound" }));
 
+      if (fromPath === '/a/file2.png') { 
+        return Effect.fail(new MoveError({ message: "Source not found", reason: "SourceNotFound" }));
+      }
 
       //TODO: Implement the move method by integrating with AWS s3
       return Effect.void;

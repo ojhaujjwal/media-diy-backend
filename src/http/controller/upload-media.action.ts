@@ -13,7 +13,7 @@ class UploadMediaError extends S.Class<UploadMediaError>('UploadMediaError')({
   errorCode: S.Enums(UPLOAD_MEDIA_ERROR_CODE),
 }) {}
 
-export class UploadMediaRequest extends S.TaggedRequest<UploadMediaRequest>()('UploadMediaRequest', UploadMediaError, S.Boolean, {
+export class UploadMediaRequest extends S.TaggedRequest<UploadMediaRequest>()('UploadMediaRequest', UploadMediaError, S.Void, {
   md5Hash: S.String,
   originalFileName: S.String,
   type: S.Enums(MediaType),
@@ -26,9 +26,9 @@ export class UploadMediaRequest extends S.TaggedRequest<UploadMediaRequest>()('U
 export const uploadMediaRouteHandler = Rpc.effect(UploadMediaRequest, (request: UploadMediaRequest) => {
   return MediaContentsRepository.pipe(
     Effect.flatMap((repo) => repo.move(request.filePath, `/media/${request.md5Hash}`)),
-    Effect.flatMap(() => Effect.succeed(true)),
-    Effect.catchTag("MoveError", (moveError) =>
-      Effect.fail(new UploadMediaError({ errorCode: UPLOAD_MEDIA_ERROR_CODE.SERVER_ERROR })
+    Effect.flatMap(() => Effect.void),
+    Effect.catchTag("MoveError", () =>
+      Effect.fail(new UploadMediaError({ errorCode: UPLOAD_MEDIA_ERROR_CODE.MEDIA_NOT_FOUND })
     )
   ))
 })
