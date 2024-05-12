@@ -21,7 +21,6 @@ const S3ClientInstanceLayer = Layer.succeed(
 
 Layer.launch(HttpServer).pipe(
   Effect.provide(MediaContentsRepositoryLive),
-  Effect.provide(MediaContentsRepositoryLive),
   Effect.provide(BaseS3ServiceLayer),
   Effect.provide(S3ClientInstanceLayer),
   NodeRuntime.runMain,

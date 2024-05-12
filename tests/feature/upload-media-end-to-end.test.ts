@@ -2,10 +2,10 @@ import * as Http from "@effect/platform/HttpClient"
 import { Resolver } from "@effect/rpc"
 import { HttpResolver } from "@effect/rpc-http"
 import type { ClientRouter } from "../../src/http/http-server"
-import { UploadMediaRequest } from "../../src/http/controller/upload-media.action"
+import { UploadMediaRequest } from "../../src/http/request/upload-media.request";
 import { MediaType } from "../../src/domain/model/media"
-import { Effect, Either, Layer, Option, identity } from "effect"
-import { GenerateUploadPresignedUrlequest } from "../../src/http/controller/generate-upload-presigned-url.action"
+import { Effect } from "effect";
+import { GenerateUploadPresignedUrlequest } from "../../src/http/request/generate-upload-presigned-url.request";
 import { pipe } from "effect"
 import * as NodeClient from "@effect/platform-node/NodeHttpClient"
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem"
@@ -13,13 +13,7 @@ import { describe, expect, it } from "@effect/vitest"
 import { FileSystem } from "@effect/platform"
 import { stream } from "@effect/platform/Http/Body"
 
-
-// Create the client
-const rpcClient = HttpResolver.make<ClientRouter>(
-  Http.client.fetchOk.pipe(
-    Http.client.mapRequest(Http.request.prependUrl("http://localhost:3000/rpc"))
-  )
-).pipe(Resolver.toClient)
+const rpcClient = HttpResolver.makeClient<ClientRouter>('http://localhost:3000/rpc');
 
 describe('UploadMediaRequest', () => {
   describe('GenerateUploadPresignedUrlRequest and then UploadMediaRequest', () => {
@@ -50,7 +44,7 @@ describe('UploadMediaRequest', () => {
           type: MediaType.PHOTO,
           filePath: filePath,
           capturedAt: new Date(),
-        }));
+        }))
       }).pipe(Effect.provide(NodeClient.layer), Effect.provide(NodeFileSystem.layer))
     );
   });

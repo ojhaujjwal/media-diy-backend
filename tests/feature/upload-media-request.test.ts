@@ -2,23 +2,17 @@ import * as Http from "@effect/platform/HttpClient"
 import { Resolver } from "@effect/rpc"
 import { HttpResolver } from "@effect/rpc-http"
 import type { ClientRouter } from "../../src/http/http-server"
-import { UploadMediaRequest } from "../../src/http/controller/upload-media.action"
+import { UploadMediaRequest } from "../../src/http/request/upload-media.request";
 import { MediaType } from "../../src/domain/model/media"
 import { Effect, Either, Option, identity } from "effect"
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from '@effect/vitest';
 
-
-// Create the client
-const client = HttpResolver.make<ClientRouter>(
-  Http.client.fetchOk.pipe(
-    Http.client.mapRequest(Http.request.prependUrl("http://localhost:3000/rpc"))
-  )
-).pipe(Resolver.toClient)
+const rpcClient = HttpResolver.makeClient<ClientRouter>('http://localhost:3000/rpc');
 
 describe('UploadMediaRequest', () => {
-  it('should return fail if file not found', async () => {
-    await Effect.runPromise(Effect.gen(function* () {
-      const failureOrSuccess = yield* client(
+  it.effect('should return fail if file not found', () =>
+    Effect.gen(function* () {
+      const failureOrSuccess = yield* rpcClient(
         new UploadMediaRequest({
           md5Hash: 'asfsadasdf',
           deviceId: 'a1',
@@ -38,6 +32,6 @@ describe('UploadMediaRequest', () => {
       }
 
       expect(error.value.errorCode).toEqual('media_not_found');
-    }));
-  });
+    })
+  );
 });

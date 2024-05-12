@@ -1,23 +1,21 @@
-import { NodeHttpServer, NodeRuntime } from "@effect/platform-node"
+import { NodeHttpServer } from "@effect/platform-node"
 import * as Http from "@effect/platform/HttpServer"
 import { Router } from "@effect/rpc"
 import { HttpRouter } from "@effect/rpc-http"
 import { Layer } from "effect"
 import { createServer } from "http"
-import { uploadMediaRouteHandler } from "./controller/upload-media.action"
-import { generateUploadPresignedUrlAction } from "./controller/generate-upload-presigned-url.action"
+import { uploadMediaRouteHandler } from "./rpc-handler/upload-media.handler"
+import { generateUploadPresignedUrlHandler } from "./rpc-handler/generate-upload-presigned-url.handler"
 
-// Implement the RPC server router
-const router = Router.make(
+const rpcRouter = Router.make(
   uploadMediaRouteHandler,
-  generateUploadPresignedUrlAction,
+  generateUploadPresignedUrlHandler,
 )
 
-export type ClientRouter = typeof router
+export type ClientRouter = typeof rpcRouter
 
-// Create the http server
 export const HttpServer = Http.router.empty.pipe(
-  Http.router.post("/rpc", HttpRouter.toHttpApp(router)),
+  Http.router.post("/rpc", HttpRouter.toHttpApp(rpcRouter)),
   Http.server.serve(Http.middleware.logger),
   Http.server.withLogAddress,
   Layer.provide(
