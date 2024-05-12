@@ -5,10 +5,12 @@ import { HttpRouter } from "@effect/rpc-http"
 import { Layer } from "effect"
 import { createServer } from "http"
 import { uploadMediaRouteHandler } from "./controller/upload-media.action"
+import { generateUploadPresignedUrlAction } from "./controller/generate-upload-presigned-url.action"
 
 // Implement the RPC server router
 const router = Router.make(
   uploadMediaRouteHandler,
+  generateUploadPresignedUrlAction,
 )
 
 export type ClientRouter = typeof router

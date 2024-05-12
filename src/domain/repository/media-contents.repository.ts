@@ -1,35 +1,29 @@
 import { Effect, Data, Context } from "effect";
 
-/**
- * @since 1.0.0
- * @category model
- */
-export type MoveErrorReason =
-  | "SourceNotFound"
 
-export class MoveError extends Data.TaggedError("MoveError")<{
+export type ErrorReason =
+  | 'UnknownError';
+
+// export type CheckFileErrorReason =
+//   | ErrorReason
+//   | "SourceNotFound";
+
+export class MediaContentsRepositoryError<T extends string = ErrorReason> extends Data.TaggedError("MediaContentsRepositoryError")<{
   message: string,
-  reason: MoveErrorReason,
-}> {}
-
-// export interface MediaContentsRepository {
-//     /**
-//    * Copy a file or directory from `fromPath` to `toPath`.
-//    *
-//    * Equivalent to `cp -r`.
-//    */
-//     readonly move: (
-//       fromPath: string,
-//       toPath: string
-//     ) => Effect.Effect<void, MoveError>
-// }
+  reason: T,
+  previous?: Error | undefined,
+}> { }
 
 export class MediaContentsRepository extends Context.Tag("MediaContentsRepository")<
 MediaContentsRepository,
   {
-    readonly move: (
+    readonly isFileExist: (
       fromPath: string,
-      toPath: string
-    ) => Effect.Effect<void, MoveError>
+    ) => Effect.Effect<boolean, MediaContentsRepositoryError, any>;
+
+    readonly generatePresignedUrlForUpload: (
+      contentType: string,
+      filePath: string,
+    ) => Effect.Effect<string, MediaContentsRepositoryError, any>;
   }
   >() { }

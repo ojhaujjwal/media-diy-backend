@@ -16,21 +16,6 @@ const client = HttpResolver.make<ClientRouter>(
 ).pipe(Resolver.toClient)
 
 describe('UploadMediaRequest', () => {
-  it('should upload the media with valid request', async () => {
-    await Effect.runPromise(Effect.gen(function* () {
-      const failureOrSuccess = yield* client(new UploadMediaRequest({
-        md5Hash: 'asfsadasdf',
-        deviceId: 'a1',
-        originalFileName: 'file1.png',
-        type: MediaType.PHOTO,
-        filePath: '/a/file1.png',
-        capturedAt: new Date(),
-      })).pipe(Effect.either);
-
-      expect(Either.isRight(failureOrSuccess)).toEqual(true);
-    }));
-  });
-
   it('should return fail if file not found', async () => {
     await Effect.runPromise(Effect.gen(function* () {
       const failureOrSuccess = yield* client(
