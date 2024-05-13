@@ -11,7 +11,7 @@ const generateFileName = (fileExtension: MediaFileExtension) => {
   return `${today.year()}/${today.monthValue()}/${today.dayOfMonth()}/${randomUUID()}.${fileExtension}`;
 };
 
-export const generateUploadPresignedUrlHandler = Rpc.effect(GenerateUploadPresignedUrlequest, (request: GenerateUploadPresignedUrlequest) => {
+export const generateUploadPresignedUrlHandler = Rpc.effect<GenerateUploadPresignedUrlequest, MediaContentsRepository>(GenerateUploadPresignedUrlequest, (request: GenerateUploadPresignedUrlequest) => {
   return Effect.all([MediaContentsRepository, Effect.succeed(generateFileName(request.fileExtension))]).pipe(
     Effect.flatMap(([repo, filePath]) => Effect.all([repo.generatePresignedUrlForUpload(request.mediaType, filePath), Effect.succeed(filePath)])),
     Effect.map(([presignedUrl, filePath]) => ({

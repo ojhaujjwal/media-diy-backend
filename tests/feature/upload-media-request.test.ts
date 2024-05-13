@@ -6,8 +6,16 @@ import { UploadMediaRequest } from "../../src/http/request/upload-media.request"
 import { MediaType } from "../../src/domain/model/media"
 import { Effect, Either, Option, identity } from "effect"
 import { describe, it, expect } from '@effect/vitest';
+import { RequestResolver } from "effect/RequestResolver";
+import { Request } from "@effect/rpc/Rpc";
 
-const rpcClient = HttpResolver.makeClient<ClientRouter>('http://localhost:3000/rpc');
+const rpcClientResolver = HttpResolver.make<ClientRouter>(
+  Http.client.fetchOk.pipe(
+    Http.client.mapRequest(Http.request.prependUrl("http://localhost:3000/rpc"))
+  )
+)
+
+const rpcClient = Resolver.toClient(rpcClientResolver as  RequestResolver<Request<any>, never>);
 
 describe('UploadMediaRequest', () => {
   it.effect('should return fail if file not found', () =>

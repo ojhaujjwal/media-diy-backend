@@ -4,7 +4,7 @@ import { MediaContentsRepository } from "../../domain/repository/media-contents.
 import { UPLOAD_MEDIA_ERROR_CODE, UploadMediaError, UploadMediaRequest } from "http/request/upload-media.request";
 
 
-export const uploadMediaRouteHandler = Rpc.effect(UploadMediaRequest, (request: UploadMediaRequest) => {
+export const uploadMediaRouteHandler = Rpc.effect<UploadMediaRequest, MediaContentsRepository>(UploadMediaRequest, (request: UploadMediaRequest) => {
   return MediaContentsRepository.pipe(
     Effect.flatMap((repo) => repo.isFileExist(request.filePath)),
 

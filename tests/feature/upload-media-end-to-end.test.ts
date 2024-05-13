@@ -12,13 +12,27 @@ import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem"
 import { describe, expect, it } from "@effect/vitest"
 import { FileSystem } from "@effect/platform"
 import { stream } from "@effect/platform/Http/Body"
+import { Request } from "@effect/rpc/Rpc";
+import { RequestResolver } from "effect/RequestResolver";
 
-const rpcClient = HttpResolver.makeClient<ClientRouter>('http://localhost:3000/rpc');
+const rpcClientResolver  = HttpResolver.make<ClientRouter>(
+  Http.client.fetchOk.pipe(
+    Http.client.mapRequest(Http.request.prependUrl("http://localhost:3000/rpc"))
+  )
+)
+
+const rpcClient = Resolver.toClient(rpcClientResolver as RequestResolver<Request<any>, never>);
 
 describe('UploadMediaRequest', () => {
   describe('GenerateUploadPresignedUrlRequest and then UploadMediaRequest', () => {
-    it.effect("should generate the URL with valid request and then upload the media", () =>
+    it("should generate the URL with valid request and then upload the media", () =>
       Effect.gen(function* () {
+
+        const a = rpcClient(new GenerateUploadPresignedUrlequest({
+          mediaType: MediaType.PHOTO,
+          fileExtension: 'jpeg',
+        }))
+
         const { presignedUrl, filePath } = yield* rpcClient(new GenerateUploadPresignedUrlequest({
           mediaType: MediaType.PHOTO,
           fileExtension: 'jpeg',
@@ -45,8 +59,7 @@ describe('UploadMediaRequest', () => {
           filePath: filePath,
           capturedAt: new Date(),
         }))
-      }).pipe(Effect.provide(NodeClient.layer), Effect.provide(NodeFileSystem.layer))
+      }).pipe(Effect.provide(NodeClient.layer), Effect.provide(NodeFileSystem.layer), Effect.runPromise)
     );
   });
 });
-
