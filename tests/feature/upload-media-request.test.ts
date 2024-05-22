@@ -8,6 +8,7 @@ import { Effect, Either, Option, identity } from "effect"
 import { describe, it, expect } from '@effect/vitest';
 import { RequestResolver } from "effect/RequestResolver";
 import { Request } from "@effect/rpc/Rpc";
+import { randomUUID } from "crypto";
 
 const rpcClientResolver = HttpResolver.make<ClientRouter>(
   Http.client.fetchOk.pipe(
@@ -28,6 +29,7 @@ describe('UploadMediaRequest', () => {
           type: MediaType.PHOTO,
           filePath: '/a/file2.png',
           capturedAt: new Date(),
+          id: randomUUID(),
         })
       ).pipe(Effect.either);
 

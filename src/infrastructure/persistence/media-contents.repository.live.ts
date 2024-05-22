@@ -26,7 +26,10 @@ export const MediaContentsRepositoryLive = Layer.succeed(
       ),
       Effect.map(() => true),
       Effect.catchTag("NotFound", () => Effect.succeed(false)),
-      Effect.catchAll((e) => Effect.fail(new MediaContentsRepositoryError({ message: 'Something went wrong', reason: "UnknownError", previous: e }))),
+      Effect.catchAll((e) => {
+        console.error('error', e);
+        return Effect.fail(new MediaContentsRepositoryError({ message: 'Something went wrong', reason: "UnknownError", previous: e }));
+      }),
     ),
 
     generatePresignedUrlForUpload: (contentType, filePath) => Effect.all([S3Service]).pipe(
@@ -41,6 +44,7 @@ export const MediaContentsRepositoryLive = Layer.succeed(
         )
       ),
       Effect.catchAll((e) => {
+        console.error('error', e);
         return Effect.fail(new MediaContentsRepositoryError({ message: 'Something went wrong', reason: "UnknownError", previous: e }));
       }),
     )

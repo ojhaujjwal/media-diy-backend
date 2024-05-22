@@ -14,6 +14,7 @@ import { FileSystem } from "@effect/platform"
 import { stream } from "@effect/platform/Http/Body"
 import { Request } from "@effect/rpc/Rpc";
 import { RequestResolver } from "effect/RequestResolver";
+import { randomUUID } from "crypto";
 
 const rpcClientResolver  = HttpResolver.make<ClientRouter>(
   Http.client.fetchOk.pipe(
@@ -58,6 +59,7 @@ describe('UploadMediaRequest', () => {
           type: MediaType.PHOTO,
           filePath: filePath,
           capturedAt: new Date(),
+          id: randomUUID(),
         }))
       }).pipe(Effect.provide(NodeClient.layer), Effect.provide(NodeFileSystem.layer), Effect.runPromise)
     );

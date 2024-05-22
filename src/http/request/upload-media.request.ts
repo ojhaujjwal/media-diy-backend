@@ -17,4 +17,5 @@ export class UploadMediaRequest extends S.TaggedRequest<UploadMediaRequest>()('U
   deviceId: S.String,
   filePath: S.String,
   capturedAt: S.Date,
+  id: S.UUID,
 }) {}
