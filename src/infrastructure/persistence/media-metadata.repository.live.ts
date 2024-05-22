@@ -13,7 +13,6 @@ export const MediaMetadataRepositoryLive = Layer.succeed(
     create: (mediaMetadata: MediaMetadata) => Effect.all([DynamoDBService]).pipe(
       Effect.flatMap(
         ([dynamoDBService]) => {
-          console.log('HashKey', `User-${mediaMetadata.ownerUserId}`);
           return dynamoDBService.putItem({
             TableName: tableName,
             Item: {
