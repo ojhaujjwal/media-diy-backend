@@ -22,6 +22,7 @@
     "vitest": "^1.5.2"
   },
   "dependencies": {
+    "@effect-aws/client-dynamodb": "^1.2.0",
     "@effect-aws/client-s3": "^1.3.0",
     "@effect/platform": "^0.53.4",
     "@effect/platform-node": "^0.49.4",
