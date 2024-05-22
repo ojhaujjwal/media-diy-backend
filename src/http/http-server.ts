@@ -6,10 +6,12 @@ import { Layer } from "effect"
 import { createServer } from "http"
 import { uploadMediaRouteHandler } from "./rpc-handler/upload-media.handler"
 import { generateUploadPresignedUrlHandler } from "./rpc-handler/generate-upload-presigned-url.handler"
+import { findMediaByIdHandler } from "./rpc-handler/find-media-by-id.handler"
 
 const rpcRouter = Router.make(
   uploadMediaRouteHandler,
   generateUploadPresignedUrlHandler,
+  findMediaByIdHandler,
 )
 
 export type ClientRouter = typeof rpcRouter

@@ -29,7 +29,7 @@ export const uploadMediaRouteHandler = Rpc.effect<UploadMediaRequest, MediaConte
       uploadedAt: new Date(),
       id: request.id,
 
-      ownerUserId: randomUUID(), // TODO: infer the user id from the authentication context
+      ownerUserId: 'a208ada0-8862-4ede-b45d-8ec34742bbbd', // TODO: infer the user id from the authentication context
     });
   })
     .pipe(

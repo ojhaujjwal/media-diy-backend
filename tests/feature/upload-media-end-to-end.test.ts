@@ -15,6 +15,7 @@ import { stream } from "@effect/platform/Http/Body"
 import { Request } from "@effect/rpc/Rpc";
 import { RequestResolver } from "effect/RequestResolver";
 import { randomUUID } from "crypto";
+import { FindMediaByIdRequest } from "../../src/http/request/find-media-by-id.request";
 
 const rpcClientResolver  = HttpResolver.make<ClientRouter>(
   Http.client.fetchOk.pipe(
@@ -42,7 +43,7 @@ describe('UploadMediaRequest', () => {
         const fs = yield* FileSystem.FileSystem
         const { size: fileSizeInBytes } = yield* fs.stat('./tests/assets/koala.jpeg');
 
-        const response = yield* pipe(
+        const uploadMediaResponse = yield* pipe(
           Http.request.put(
             presignedUrl,
             { body: stream(fs.stream('./tests/assets/koala.jpeg')), headers: { 'Content-Length': fileSizeInBytes.toString() } }
@@ -50,7 +51,9 @@ describe('UploadMediaRequest', () => {
           client,
           Effect.scoped,
         )
-        expect(response.status).toEqual(200);
+        expect(uploadMediaResponse.status).toEqual(200);
+
+        const id = randomUUID();
 
         yield* rpcClient(new UploadMediaRequest({
           md5Hash: 'asfsadasdf',
@@ -59,8 +62,15 @@ describe('UploadMediaRequest', () => {
           type: MediaType.PHOTO,
           filePath: filePath,
           capturedAt: new Date(),
-          id: randomUUID(),
+          id,
         }))
+
+        const mediaResponse = yield* rpcClient(new FindMediaByIdRequest({
+          id,
+          ownerUserId: 'a208ada0-8862-4ede-b45d-8ec34742bbbd',
+        }));
+
+        expect(mediaResponse.id).toEqual(id);
       }).pipe(Effect.provide(NodeClient.layer), Effect.provide(NodeFileSystem.layer), Effect.runPromise)
     );
   });

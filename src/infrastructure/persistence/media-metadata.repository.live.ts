@@ -60,7 +60,7 @@ export const MediaMetadataRepositoryLive = Layer.succeed(
             filePath: item.Item.filePath.S as string,
 
             md5Hash: item.Item.md5Hash.S as string,
-            ownerUserId: item.Item.ownerUserId.S  as string,
+            ownerUserId,
             type: item.Item.type.S as MediaType,
             uploadedAt: new Date(item.Item.uploadedAt.S as string),
             
