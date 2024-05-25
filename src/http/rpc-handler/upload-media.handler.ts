@@ -14,10 +14,17 @@ export const uploadMediaRouteHandler = Rpc.effect<UploadMediaRequest, MediaConte
     if (!isFileExist) {
       yield* Effect.fail(new UploadMediaError({ errorCode: UPLOAD_MEDIA_ERROR_CODE.MEDIA_NOT_FOUND }));
     }
+
+    const ownerUserId = 'a208ada0-8862-4ede-b45d-8ec34742bbbd'; // TODO: infer the user id from the authentication context;
   
     const mediaMetadataRepository = yield* MediaMetadataRepository;
 
-    //TODO: check if media already exists with the uuid
+    yield* mediaMetadataRepository
+      .findById(ownerUserId, request.id)
+      .pipe(
+        Effect.flatMap(() => Effect.fail(new UploadMediaError({ errorCode: UPLOAD_MEDIA_ERROR_CODE.MEDIA_ALREADY_EXISTS }))),
+        Effect.catchTag('MediaMetadataRepositoryError', (e) => Effect.void),
+      )
   
     yield* mediaMetadataRepository.create({
       originalFileName: request.originalFileName,
@@ -29,7 +36,7 @@ export const uploadMediaRouteHandler = Rpc.effect<UploadMediaRequest, MediaConte
       uploadedAt: new Date(),
       id: request.id,
 
-      ownerUserId: 'a208ada0-8862-4ede-b45d-8ec34742bbbd', // TODO: infer the user id from the authentication context
+      ownerUserId,
     });
   })
     .pipe(
