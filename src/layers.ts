@@ -1,8 +1,10 @@
-import { BaseS3ServiceLayer, S3ClientInstance, S3ClientInstanceConfig, S3ServiceLayer } from "@effect-aws/client-s3";
+import { S3ClientInstanceConfig, S3ServiceLayer } from "@effect-aws/client-s3";
 import { Layer } from "effect";
 import { MediaContentsRepositoryLive } from "infrastructure/persistence/media-contents.repository.live";
 import { MediaMetadataRepositoryLive } from "infrastructure/persistence/media-metadata.repository.live";
 import { DynamoDBClientInstanceConfig, DynamoDBService, DynamoDBServiceLayer } from "@effect-aws/client-dynamodb";
+import { PrettyLogger } from "effect-log";
+
 
 // DynamoDB Client Configuration
 const DynamoDBClientConfigLayer = Layer.succeed(
@@ -39,6 +41,7 @@ export const CustomS3ServiceLayer = S3ServiceLayer.pipe(
 
 export default Layer.mergeAll(
   ...[
+    PrettyLogger.layer({}),
     MediaContentsRepositoryLive,
     MediaMetadataRepositoryLive,
     CustomS3ServiceLayer,

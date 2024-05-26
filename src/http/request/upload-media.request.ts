@@ -7,7 +7,7 @@ export enum UPLOAD_MEDIA_ERROR_CODE {
   MEDIA_ALREADY_EXISTS = 'media_already_exists',
 }
 
-export class UploadMediaError extends S.Class<UploadMediaError>('UploadMediaError')({
+export class UploadMediaError extends S.TaggedError<UploadMediaError>()("UploadMediaError", {
   errorCode: S.Enums(UPLOAD_MEDIA_ERROR_CODE),
 }) {}
 

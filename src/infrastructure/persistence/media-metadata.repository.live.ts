@@ -34,7 +34,6 @@ export const MediaMetadataRepositoryLive = Layer.succeed(
       ),
       Effect.flatMap(() => Effect.void),
       Effect.catchAll((e) => {
-        console.error('error', e);
         return Effect.fail(new MediaMetadataRepositoryError({ message: 'Something went wrong', reason: "UnknownError", previous: e }));
       }),
     ),
@@ -70,7 +69,6 @@ export const MediaMetadataRepositoryLive = Layer.succeed(
         }
       }),
       Effect.catchAll((e) => {
-        console.error('error', e);
         return Effect.fail(new MediaMetadataRepositoryError({ message: 'Something went wrong', reason: "UnknownError", previous: e }));
       }),
     ),

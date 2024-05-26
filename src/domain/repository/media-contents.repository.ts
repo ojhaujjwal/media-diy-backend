@@ -4,14 +4,10 @@ import { Effect, Data, Context } from "effect";
 export type ErrorReason =
   | 'UnknownError';
 
-// export type CheckFileErrorReason =
-//   | ErrorReason
-//   | "SourceNotFound";
-
 export class MediaContentsRepositoryError<T extends string = ErrorReason> extends Data.TaggedError("MediaContentsRepositoryError")<{
   message: string,
   reason: T,
-  previous?: Error | undefined,
+  previous?: Error,
 }> { }
 
 export class MediaContentsRepository extends Context.Tag("MediaContentsRepository")<

@@ -12,7 +12,7 @@ export type FindByIdErrorReason =
 export class MediaMetadataRepositoryError<T extends string = ErrorReason> extends Data.TaggedError("MediaMetadataRepositoryError")<{
   message: string,
   reason: T,
-  previous?: Error | undefined,
+  previous?: Error,
 }> { }
 
 export class MediaMetadataRepository extends Context.Tag("MediaMetadataRepository")<

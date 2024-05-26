@@ -3,7 +3,9 @@ import { Effect, Layer } from "effect";
 import { MediaContentsRepository } from "../../domain/repository/media-contents.repository";
 import { UPLOAD_MEDIA_ERROR_CODE, UploadMediaError, UploadMediaRequest } from "http/request/upload-media.request";
 import { MediaMetadataRepository } from "domain/repository/media-metadata.repository";
-import { randomUUID } from "crypto";
+import { errorHandler } from "./helpers";
+
+const routeErrorHandler = errorHandler({ failureResult: new UploadMediaError({ errorCode: UPLOAD_MEDIA_ERROR_CODE.SERVER_ERROR }) });
 
 export const uploadMediaRouteHandler = Rpc.effect<UploadMediaRequest, MediaContentsRepository | MediaMetadataRepository>(UploadMediaRequest, (request: UploadMediaRequest) => 
   Effect.gen(function* () {
@@ -23,7 +25,7 @@ export const uploadMediaRouteHandler = Rpc.effect<UploadMediaRequest, MediaConte
       .findById(ownerUserId, request.id)
       .pipe(
         Effect.flatMap(() => Effect.fail(new UploadMediaError({ errorCode: UPLOAD_MEDIA_ERROR_CODE.MEDIA_ALREADY_EXISTS }))),
-        Effect.catchTag('MediaMetadataRepositoryError', (e) => Effect.void),
+        Effect.catchTag('MediaMetadataRepositoryError', () => Effect.void),
       )
   
     yield* mediaMetadataRepository.create({
@@ -40,14 +42,10 @@ export const uploadMediaRouteHandler = Rpc.effect<UploadMediaRequest, MediaConte
     });
   })
     .pipe(
-      //TODO log errors
       Effect.catchTags({
-        MediaMetadataRepositoryError: () => Effect.fail(new UploadMediaError({ errorCode: UPLOAD_MEDIA_ERROR_CODE.SERVER_ERROR })),
-        MediaContentsRepositoryError:  () => Effect.fail(new UploadMediaError({ errorCode: UPLOAD_MEDIA_ERROR_CODE.SERVER_ERROR })),
+        MediaMetadataRepositoryError: routeErrorHandler,
+        MediaContentsRepositoryError:  routeErrorHandler,
       }),
-      Effect.catchAllDefect((e) => {
-        console.error('error', e);
-        return Effect.fail(new UploadMediaError({ errorCode: UPLOAD_MEDIA_ERROR_CODE.SERVER_ERROR }))
-      }),
+      Effect.catchAllDefect(routeErrorHandler),
     )
 );
