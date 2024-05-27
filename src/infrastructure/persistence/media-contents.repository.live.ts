@@ -4,16 +4,8 @@ import {
   MediaContentsRepositoryError,
 } from "../../domain/repository/media-contents.repository";
 import { Effect, Layer } from "effect";
-import { randomUUID } from "crypto";
-import { LocalDate } from "@js-joda/core";
-import { MediaFileExtension } from "../../domain/model/media";
 
 const bucket = process.env.AWS_BUCKET_NAME as string;
-
-const generateFileName = (fileExtension: MediaFileExtension) => {
-  const today = LocalDate.now();
-  return `${today.year()}/${today.monthValue()}/${today.dayOfMonth()}/${randomUUID()}.${fileExtension}`;
-};
 
 export const MediaContentsRepositoryLive = Layer.succeed(
   MediaContentsRepository,

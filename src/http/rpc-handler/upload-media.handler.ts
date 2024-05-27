@@ -1,5 +1,5 @@
 import { Rpc } from "@effect/rpc";
-import { Effect, Layer } from "effect";
+import { Effect } from "effect";
 import { MediaContentsRepository } from "../../domain/repository/media-contents.repository";
 import {
   UPLOAD_MEDIA_ERROR_CODE,

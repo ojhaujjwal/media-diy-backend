@@ -20,7 +20,7 @@ export class MediaMetadataRepository extends Context.Tag(
   {
     readonly create: (
       MediaMetadata: MediaMetadata,
-    ) => Effect.Effect<void, MediaMetadataRepositoryError, any>;
+    ) => Effect.Effect<void, MediaMetadataRepositoryError, any>; //eslint-disable-line @typescript-eslint/no-explicit-any
 
     readonly findById: (
       ownerUserId: string,
@@ -28,7 +28,7 @@ export class MediaMetadataRepository extends Context.Tag(
     ) => Effect.Effect<
       MediaMetadata,
       MediaMetadataRepositoryError<FindByIdErrorReason>,
-      any
+      any //eslint-disable-line @typescript-eslint/no-explicit-any
     >;
   }
 >() {}
