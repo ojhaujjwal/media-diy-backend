@@ -2,11 +2,11 @@ import { S3Service } from "@effect-aws/client-s3";
 import {
   MediaContentsRepository,
   MediaContentsRepositoryError,
-} from "domain/repository/media-contents.repository";
+} from "../../domain/repository/media-contents.repository";
 import { Effect, Layer } from "effect";
 import { randomUUID } from "crypto";
 import { LocalDate } from "@js-joda/core";
-import { MediaFileExtension } from "domain/model/media";
+import { MediaFileExtension } from "../../domain/model/media";
 
 const bucket = process.env.AWS_BUCKET_NAME as string;
 

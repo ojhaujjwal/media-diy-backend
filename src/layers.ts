@@ -4,7 +4,6 @@ import { MediaContentsRepositoryLive } from "infrastructure/persistence/media-co
 import { MediaMetadataRepositoryLive } from "infrastructure/persistence/media-metadata.repository.live";
 import {
   DynamoDBClientInstanceConfig,
-  DynamoDBService,
   DynamoDBServiceLayer,
 } from "@effect-aws/client-dynamodb";
 import { PrettyLogger } from "effect-log";

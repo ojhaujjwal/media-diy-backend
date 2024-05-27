@@ -1,11 +1,11 @@
 import { Rpc } from "@effect/rpc";
-import { MediaMetadataRepository } from "domain/repository/media-metadata.repository";
+import { MediaMetadataRepository } from "../../domain/repository/media-metadata.repository";
 import { Effect } from "effect";
 import {
   FindMediaByIdError,
   FindMediaByIdRequest,
   ERROR_CODE,
-} from "http/request/find-media-by-id.request";
+} from "../../http/request/find-media-by-id.request";
 
 export const findMediaByIdHandler = Rpc.effect<
   FindMediaByIdRequest,

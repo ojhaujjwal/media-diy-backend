@@ -1,4 +1,4 @@
-import { MediaMetadata } from "domain/model/media";
+import { MediaMetadata } from "../../domain/model/media";
 import { Effect, Data, Context } from "effect";
 
 export type ErrorReason = "UnknownError";

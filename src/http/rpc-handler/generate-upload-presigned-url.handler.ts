@@ -8,7 +8,7 @@ import {
   ERROR_CODE,
   GenerateUploadPresignedUrlequest,
   GenerateUploadPresignedUrlError,
-} from "http/request/generate-upload-presigned-url.request";
+} from "../../http/request/generate-upload-presigned-url.request";
 import { errorHandler } from "./helpers";
 
 const generateFileName = (fileExtension: MediaFileExtension) => {

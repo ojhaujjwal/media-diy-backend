@@ -5,8 +5,8 @@ import {
   UPLOAD_MEDIA_ERROR_CODE,
   UploadMediaError,
   UploadMediaRequest,
-} from "http/request/upload-media.request";
-import { MediaMetadataRepository } from "domain/repository/media-metadata.repository";
+} from "../../http/request/upload-media.request";
+import { MediaMetadataRepository } from "../../domain/repository/media-metadata.repository";
 import { errorHandler } from "./helpers";
 
 const routeErrorHandler = errorHandler({

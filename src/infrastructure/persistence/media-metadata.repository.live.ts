@@ -2,8 +2,8 @@ import { Effect, Layer } from "effect";
 import {
   MediaMetadataRepository,
   MediaMetadataRepositoryError,
-} from "domain/repository/media-metadata.repository";
-import { MediaMetadata, MediaType } from "domain/model/media";
+} from "../../domain/repository/media-metadata.repository";
+import { MediaMetadata, MediaType } from "../../domain/model/media";
 import { DynamoDBService } from "@effect-aws/client-dynamodb";
 
 const tableName = process.env.AWS_DYNAMODB_TABLE as string;
