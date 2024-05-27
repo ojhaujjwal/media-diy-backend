@@ -1,0 +1,16 @@
+name: Deploy Prod
+
+on:
+  workflow_run:
+    workflows: ["Deploy Staging"]
+    types:
+      - completed
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    environment: Production
+
+    steps:
+      - name: run test
+        run: echo true
