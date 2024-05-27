@@ -7,7 +7,8 @@
   "scripts": {
     "test": "vitest run",
     "build": "tsc",
-    "dev": "nodemon --exec 'tsx -r dotenv/config' --watch src/ src/http/run-server.ts"
+    "dev": "nodemon --exec 'tsx -r dotenv/config' --watch src/ src/http/run-server.ts",
+    "format": "prettier ./src --write"
   },
   "author": "",
   "license": "ISC",
@@ -16,6 +17,7 @@
     "@types/node": "^20.11.19",
     "dotenv": "^16.4.5",
     "nodemon": "^3.1.0",
+    "prettier": "^3.2.5",
     "ts-node": "^10.9.2",
     "tsx": "^4.7.1",
     "typescript": "^5.4.5",

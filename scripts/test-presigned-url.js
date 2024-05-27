@@ -1,3 +1,5 @@
+// eslint-disable-file
+
 const Minio = require('minio')
 require('dotenv').config();
 

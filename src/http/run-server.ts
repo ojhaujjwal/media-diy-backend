@@ -7,4 +7,4 @@ Layer.launch(HttpServer).pipe(
   Effect.provide(layers),
   Logger.withMinimumLogLevel(LogLevel.Info),
   NodeRuntime.runMain,
-)
+);
