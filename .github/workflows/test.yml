@@ -1,0 +1,14 @@
+name: Automated Tests
+
+on:
+  - push
+
+jobs:
+  test:
+    name: unit-test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: run test
+        run: echo true
+  
