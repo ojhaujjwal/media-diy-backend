@@ -59,8 +59,6 @@ export const uploadMediaRouteHandler = Rpc.effect<
       uploadedAt: new Date(),
       id: request.id,
 
-      //exif: {},
-
       ownerUserId,
     });
   }).pipe(
