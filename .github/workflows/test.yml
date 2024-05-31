@@ -12,6 +12,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version-file: '.nvmrc'
+      - name: npm install
+        run: npm install
       - name: prettier
         run: npx prettier --check ./src
       - name: lint
