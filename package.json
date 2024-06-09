@@ -8,7 +8,7 @@
     "test": "vitest run",
     "build": "tsc",
     "dev": "nodemon --exec 'tsx -r dotenv/config' --watch src/ src/http/run-server.ts",
-    "format": "prettier ./src --write",
+    "format": "prettier ./src ./tests --write",
     "lint": "eslint ./src"
   },
   "author": "",
