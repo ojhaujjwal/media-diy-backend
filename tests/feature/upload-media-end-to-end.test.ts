@@ -15,8 +15,6 @@ import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import { describe, expect, it } from "@effect/vitest";
 import { FileSystem } from "@effect/platform";
 import { stream } from "@effect/platform/Http/Body";
-import { Request } from "@effect/rpc/Rpc";
-import { RequestResolver } from "effect/RequestResolver";
 import { randomUUID } from "crypto";
 import { FindMediaByIdRequest } from "../../src/http/request/find-media-by-id.request";
 
@@ -28,15 +26,13 @@ const rpcClientResolver = HttpResolver.make<ClientRouter>(
   ),
 );
 
-const rpcClient = Resolver.toClient(
-  rpcClientResolver as RequestResolver<Request<any>, never>,
-);
+const rpcClient = Resolver.toClient(rpcClientResolver);
 
 describe("UploadMediaRequest", () => {
   describe("GenerateUploadPresignedUrlRequest and then UploadMediaRequest", () => {
     it("should generate the URL with valid request and then upload the media and then fail when uploading the same media", () =>
       Effect.gen(function* () {
-        const a = rpcClient(
+        rpcClient(
           new GenerateUploadPresignedUrlequest({
             mediaType: MediaType.PHOTO,
             fileExtension: "jpeg",

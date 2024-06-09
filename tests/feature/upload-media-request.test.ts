@@ -1,13 +1,11 @@
 import * as Http from "@effect/platform/HttpClient";
 import { Resolver } from "@effect/rpc";
 import { HttpResolver } from "@effect/rpc-http";
-import type { ClientRouter } from "../../src/http/http-server";
+import type { ClientRouter } from "../../src/http/http-server-factory";
 import { UploadMediaRequest } from "../../src/http/request/upload-media.request";
 import { MediaType } from "../../src/domain/model/media";
-import { Effect, Either, Option, identity } from "effect";
+import { Effect, Either, Option } from "effect";
 import { describe, it, expect } from "@effect/vitest";
-import { RequestResolver } from "effect/RequestResolver";
-import { Request } from "@effect/rpc/Rpc";
 import { randomUUID } from "crypto";
 
 const rpcClientResolver = HttpResolver.make<ClientRouter>(
@@ -18,9 +16,7 @@ const rpcClientResolver = HttpResolver.make<ClientRouter>(
   ),
 );
 
-const rpcClient = Resolver.toClient(
-  rpcClientResolver as RequestResolver<Request<any>, never>,
-);
+const rpcClient = Resolver.toClient(rpcClientResolver);
 
 describe("UploadMediaRequest", () => {
   it.effect("should return fail if file not found", () =>

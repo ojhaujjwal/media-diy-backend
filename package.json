@@ -9,7 +9,7 @@
     "build": "tsc",
     "dev": "nodemon --exec 'tsx -r dotenv/config' --watch src/ src/http/run-server.ts",
     "format": "prettier ./src ./tests --write",
-    "lint": "eslint ./src"
+    "lint": "eslint ./src ./tests"
   },
   "author": "",
   "license": "ISC",
