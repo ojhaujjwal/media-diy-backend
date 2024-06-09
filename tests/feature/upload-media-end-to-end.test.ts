@@ -1,7 +1,7 @@
 import * as Http from "@effect/platform/HttpClient";
 import { Resolver } from "@effect/rpc";
 import { HttpResolver } from "@effect/rpc-http";
-import type { ClientRouter } from "../../src/http/http-server";
+import type { ClientRouter } from "../../src/http/http-server-factory";
 import {
   UPLOAD_MEDIA_ERROR_CODE,
   UploadMediaRequest,

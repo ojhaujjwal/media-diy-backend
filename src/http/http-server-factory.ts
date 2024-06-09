@@ -16,15 +16,12 @@ const rpcRouter = Router.make(
 
 export type ClientRouter = typeof rpcRouter;
 
-export const HttpServer = Http.router.empty.pipe(
-  Http.router.post("/rpc", HttpRouter.toHttpApp(rpcRouter)),
-  Http.server.serve(Http.middleware.logger),
-  Http.server.withLogAddress,
-  Layer.provide(
-    NodeHttpServer.server.layer(createServer, {
-      port: process.env.SERVER_PORT
-        ? parseInt(process.env.SERVER_PORT, 10)
-        : 3000,
-    }),
-  ),
-);
+export const HttpServerFactory = (serverPort: number) =>
+  Http.router.empty.pipe(
+    Http.router.post("/rpc", HttpRouter.toHttpApp(rpcRouter)),
+    Http.server.serve(Http.middleware.logger),
+    Http.server.withLogAddress,
+    Layer.provide(
+      NodeHttpServer.server.layer(createServer, { port: serverPort }),
+    ),
+  );
