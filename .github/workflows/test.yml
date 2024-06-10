@@ -8,8 +8,13 @@ jobs:
     name: unit-test
     runs-on: ubuntu-latest
     steps:
-      - name: setup minio
-        run: wget https://dl.min.io/server/minio/release/linux-amd64/minio && chmod +x minio && mkdir -p ./data && ./minio server ./data
+      - name: Download minio
+        run: wget https://dl.min.io/server/minio/release/linux-amd64/minio && chmod +x minio && mkdir -p ./data
+      - uses: JarvusInnovations/background-action@v1
+        name: Run minio on background
+        with:
+          run: ./minio server ./data
+          wait-on: http://localhost:9000/minio/health/live
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
