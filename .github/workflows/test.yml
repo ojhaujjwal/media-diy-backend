@@ -9,7 +9,8 @@ jobs:
     runs-on: ubuntu-latest
     services: 
       minio:
-        image: quay.io/minio/minio:RELEASE.2024-05-07T06-41-25Z-cpuv1
+        image: ojhaujjwal/minio-github-actions:RELEASE.2024-05-07T06-41-25Z-cpuv1
+        options: --health-cmd "curl -s http://localhost:9000/minio/health/live"
         ports:
           - 9000:9000
     steps:
