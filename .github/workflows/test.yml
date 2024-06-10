@@ -9,12 +9,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Download minio
-        run: wget https://dl.min.io/server/minio/release/linux-amd64/minio && chmod +x minio && mkdir -p ./data
+        run: wget https://dl.min.io/server/minio/release/linux-amd64/minio && chmod +x minio && mkdir -p ./minio-data
+        working-directory: /tmp
       - uses: JarvusInnovations/background-action@v1
         name: Run minio on background
         with:
-          run: ./minio server ./data
+          run: ./minio server ./minio-data
           wait-on: http://localhost:9000/minio/health/live
+          working-directory: /tmp
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
