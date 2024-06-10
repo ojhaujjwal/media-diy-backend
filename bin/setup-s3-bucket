@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+set -eux
+
+export $(grep -v '^#' ${ENV_FILE:-".env.test"} | xargs)
+
+aws s3api create-bucket \
+    --bucket $AWS_BUCKET_NAME \
+    --endpoint-url $AWS_S3_ENDPOINT \
+    --region $AWS_REGION \
+    --create-bucket-configuration LocationConstraint=$AWS_REGION

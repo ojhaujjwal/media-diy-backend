@@ -1,7 +1,8 @@
 import * as Http from "@effect/platform/HttpClient";
 import { Resolver } from "@effect/rpc";
 import { HttpResolver } from "@effect/rpc-http";
-import type { ClientRouter } from "../../src/http/http-server-factory";
+import type { ClientRouter } from "../../src/http/app-server-factory";
+import { appServerFactory } from "../../src/http/app-server-factory";
 import {
   UPLOAD_MEDIA_ERROR_CODE,
   UploadMediaRequest,
@@ -12,16 +13,17 @@ import { GenerateUploadPresignedUrlequest } from "../../src/http/request/generat
 import { pipe } from "effect";
 import * as NodeClient from "@effect/platform-node/NodeHttpClient";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect, it, beforeAll } from "@effect/vitest";
 import { FileSystem } from "@effect/platform";
 import { stream } from "@effect/platform/Http/Body";
 import { randomUUID } from "crypto";
 import { FindMediaByIdRequest } from "../../src/http/request/find-media-by-id.request";
+import { NodeRuntime } from "@effect/platform-node";
 
 const rpcClientResolver = HttpResolver.make<ClientRouter>(
   Http.client.fetchOk.pipe(
     Http.client.mapRequest(
-      Http.request.prependUrl("http://localhost:3000/rpc"),
+      Http.request.prependUrl("http://localhost:9020/rpc"),
     ),
   ),
 );
@@ -29,6 +31,12 @@ const rpcClientResolver = HttpResolver.make<ClientRouter>(
 const rpcClient = Resolver.toClient(rpcClientResolver);
 
 describe("UploadMediaRequest", () => {
+  beforeAll(() => {
+    NodeRuntime.runMain(
+      appServerFactory(9020), //TODO: generate random available port instead
+    );
+  });
+
   describe("GenerateUploadPresignedUrlRequest and then UploadMediaRequest", () => {
     it("should generate the URL with valid request and then upload the media and then fail when uploading the same media", () =>
       Effect.gen(function* () {

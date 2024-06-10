@@ -32,6 +32,9 @@ jobs:
           cors: '*'
       - name: setup dynamo db
         run: bin/setup-dynamo-table
-        env:
-          AWS_ACCESS_KEY_ID: 'abcd'
-          AWS_SECRET_ACCESS_KEY: 'abcde'
+
+      - name: setup s3 bucket
+        run: bin/setup-s3-bucket
+
+      - name: vitest
+        run: npm run test
