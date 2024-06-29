@@ -42,3 +42,11 @@ jobs:
 
       - name: vitest
         run: npm run test
+
+
+  call-workflow-passing-data:
+    if: github.ref == 'refs/heads/main'
+    needs:
+      - test
+    uses: ./.github/workflows/deploy-production.yml
+    secrets: inherit

@@ -1,16 +1,33 @@
 name: Deploy Prod
 
 on:
-  workflow_run:
-    workflows: ["Deploy Staging"]
-    types:
-      - completed
+  workflow_call:
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
+  tofu-deploy:
+    name: tofu-deploy
+    runs-on: ubuntu-20.04
     environment: Production
-
     steps:
-      - name: run test
-        run: echo true
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup opentofu
+        uses: opentofu/setup-opentofu@v1
+        with:
+          tofu_version: 1.7.2
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-southeast-2
+
+      - name: debug
+        run: ls ./
+
+      - name: tofu init
+        run: cd tofu/ && tofu init -input=false
+
+      - name: tofu apply
+        run: cd tofu/ && tofu apply -auto-approve
