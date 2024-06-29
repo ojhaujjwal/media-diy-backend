@@ -7,7 +7,7 @@ resource "aws_s3_bucket" "media" {
   }
 }
 
-resource "aws_s3_bucket_public_access_block" "terraform_state_no_public_access" {
+resource "aws_s3_bucket_public_access_block" "media_diy_no_public_access" {
   bucket                  = aws_s3_bucket.media.id
   block_public_acls       = true
   block_public_policy     = true

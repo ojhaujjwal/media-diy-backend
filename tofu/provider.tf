@@ -5,6 +5,7 @@ provider "aws" {
       Project = var.project
     }
   }
+  profile = "media-diy"
 }
 
 terraform {
@@ -12,6 +13,7 @@ terraform {
     bucket = "ujjwal-tf-state"
     key    = "media-diy/terraform.tfstate"
     region = "ap-southeast-2"
+    profile = "media-diy"
   }
 
   required_providers {
