@@ -23,11 +23,8 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ap-southeast-2
 
-      - name: debug
-        run: ls ./
-
       - name: tofu init
         run: cd tofu/ && tofu init -input=false
 
       - name: tofu apply
-        run: cd tofu/ && tofu apply -auto-approve
+        run: cd tofu/ && tofu apply -auto-approve  -input=false
