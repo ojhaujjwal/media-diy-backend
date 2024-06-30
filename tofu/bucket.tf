@@ -3,7 +3,7 @@ resource "aws_s3_bucket" "media" {
  
   lifecycle {
     # Prevent accidental deletion of this S3 bucket
-    #prevent_destroy = true
+    prevent_destroy = true
   }
 }
 
