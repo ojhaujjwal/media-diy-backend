@@ -9,3 +9,9 @@ variable project {
   default = "media-diy"
   description = "Project name"
 }
+
+variable s3_bucket_name {
+  type    = string
+  default = "media-diy-ujjwal"
+  description = "S3 bucket name"
+}

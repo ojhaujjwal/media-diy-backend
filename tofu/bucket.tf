@@ -1,5 +1,5 @@
 resource "aws_s3_bucket" "media" {
-  bucket = "media"
+  bucket = var.s3_bucket_name
  
   lifecycle {
     # Prevent accidental deletion of this S3 bucket
