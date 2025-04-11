@@ -27,3 +27,5 @@ export class GenerateUploadPresignedUrlequest extends S.TaggedRequest<GenerateUp
     fileExtension: MediaFileExtensionSchema,
   },
 ) {}
+
+export { MediaType };

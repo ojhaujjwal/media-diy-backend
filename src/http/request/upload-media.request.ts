@@ -19,7 +19,7 @@ export class UploadMediaRequest extends S.TaggedRequest<UploadMediaRequest>()(
   UploadMediaError,
   S.Void,
   {
-    md5Hash: S.String,
+    md5Hash: S.String, // todo: convert it to sha256 hash
     originalFileName: S.String,
     type: S.Enums(MediaType),
     deviceId: S.String,
