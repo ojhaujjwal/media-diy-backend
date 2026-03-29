@@ -39,26 +39,25 @@ export const MediaContentsRepositoryLive: Layer.Layer<
         ),
 
       generatePresignedUrlForUpload: (contentType, filePath) =>
-        Effect.gen(function* () {
-          return yield* s3Service.putObject(
+        s3Service.putObject(
             {
               Bucket: bucketName,
               Key: filePath,
               ContentType: contentType,
             },
             { presigned: true },
-          );
-        }).pipe(
-          Effect.catchAll((e) =>
-            Effect.fail(
-              new MediaContentsRepositoryError({
-                message: "Something went wrong",
-                reason: "UnknownError",
-                previous: e,
-              }),
+          )
+          .pipe(
+            Effect.catchAll((e) =>
+              Effect.fail(
+                new MediaContentsRepositoryError({
+                  message: "Something went wrong",
+                  reason: "UnknownError",
+                  previous: e,
+                }),
+              ),
             ),
           ),
-        ),
     });
   }),
 );

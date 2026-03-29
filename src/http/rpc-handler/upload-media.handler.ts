@@ -23,11 +23,10 @@ export const uploadMediaHandler = (request: UploadMediaRequest) =>
     );
 
     if (!isFileExist) {
-      return yield* Effect.fail(
+      return yield*
         new UploadMediaError({
           errorCode: UPLOAD_MEDIA_ERROR_CODE.MEDIA_NOT_FOUND,
-        }),
-      );
+        });
     }
 
     const ownerUserId = "a208ada0-8862-4ede-b45d-8ec34742bbbd";

@@ -47,22 +47,20 @@ export const MediaMetadataRepositoryLive: Layer.Layer<
 
     return MediaMetadataRepository.of({
       create: (mediaMetadata: MediaMetadata) =>
-        Effect.gen(function* () {
-          yield* dynamoDBService.putItem({
-            TableName: tableName,
-            Item: {
-              HashKey: { S: `User-${mediaMetadata.ownerUserId}` },
-              RangeKey: { S: `MediaMetadata-${mediaMetadata.id}` },
+        dynamoDBService.putItem({
+          TableName: tableName,
+          Item: {
+            HashKey: { S: `User-${mediaMetadata.ownerUserId}` },
+            RangeKey: { S: `MediaMetadata-${mediaMetadata.id}` },
 
-              originalFileName: { S: mediaMetadata.originalFileName },
-              deviceId: { S: mediaMetadata.deviceId },
-              filePath: { S: mediaMetadata.filePath },
-              md5Hash: { S: mediaMetadata.md5Hash },
-              type: { S: mediaMetadata.type },
-              capturedAt: { S: mediaMetadata.capturedAt.toISOString() },
-              uploadedAt: { S: mediaMetadata.uploadedAt.toISOString() },
-            },
-          });
+            originalFileName: { S: mediaMetadata.originalFileName },
+            deviceId: { S: mediaMetadata.deviceId },
+            filePath: { S: mediaMetadata.filePath },
+            md5Hash: { S: mediaMetadata.md5Hash },
+            type: { S: mediaMetadata.type },
+            capturedAt: { S: mediaMetadata.capturedAt.toISOString() },
+            uploadedAt: { S: mediaMetadata.uploadedAt.toISOString() },
+          },
         }).pipe(
           Effect.flatMap(() => Effect.void),
           Effect.catchAll((e) =>
@@ -87,12 +85,10 @@ export const MediaMetadataRepositoryLive: Layer.Layer<
           });
 
           if (!item.Item) {
-            return yield* Effect.fail(
-              new MediaMetadataRepositoryError({
+            return yield* new MediaMetadataRepositoryError({
                 message: "Record not found",
                 reason: "RecordNotFound",
-              }),
-            );
+              });
           }
 
           const itemData = item.Item;
