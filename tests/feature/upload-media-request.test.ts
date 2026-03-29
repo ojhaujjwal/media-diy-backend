@@ -26,7 +26,7 @@ describe("UploadMediaRequest", () => {
 
       const failureOrSuccess = yield* client
         .UploadMediaRequest({
-          md5Hash: "asfsadasdf",
+          sha256Hash: "asfsadasdf",
           deviceId: "a1",
           originalFileName: "file1.png",
           type: MediaType.PHOTO,

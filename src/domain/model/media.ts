@@ -54,7 +54,7 @@ export const ExifMetadata = S.Struct({
 export class MediaMetadata extends S.Class<MediaMetadata>("MediaMetadata")({
   id: S.UUID,
   originalFileName: S.String,
-  md5Hash: S.String,
+  sha256Hash: S.String,
   type: S.Enums(MediaType),
   deviceId: S.String,
   filePath: S.String,

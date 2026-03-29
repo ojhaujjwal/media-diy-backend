@@ -6,6 +6,8 @@ export type ErrorReason = "UnknownError";
 
 export type FindByIdErrorReason = ErrorReason | "RecordNotFound";
 
+export type FindByHashErrorReason = ErrorReason | "RecordNotFound";
+
 export class MediaMetadataRepositoryError<
   T extends string = ErrorReason,
 > extends Data.TaggedError("MediaMetadataRepositoryError")<{
@@ -29,6 +31,14 @@ export class MediaMetadataRepository extends Context.Tag(
     ) => Effect.Effect<
       MediaMetadata,
       MediaMetadataRepositoryError<FindByIdErrorReason>,
+      never
+    >;
+
+    readonly findByHash: (
+      sha256Hash: string,
+    ) => Effect.Effect<
+      MediaMetadata,
+      MediaMetadataRepositoryError<FindByHashErrorReason>,
       never
     >;
   }

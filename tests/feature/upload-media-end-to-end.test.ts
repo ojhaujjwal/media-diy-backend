@@ -58,7 +58,7 @@ describe("UploadMediaRequest", () => {
         const id = randomUUID();
 
         yield* client.UploadMediaRequest({
-          md5Hash: "asfsadasdf",
+          sha256Hash: "asfsadasdf",
           deviceId: "a1",
           originalFileName: "koala.jpeg",
           type: MediaType.PHOTO,
@@ -76,7 +76,7 @@ describe("UploadMediaRequest", () => {
 
         const failureOrSuccess = yield* client
           .UploadMediaRequest({
-            md5Hash: "asfsadasdf",
+            sha256Hash: "asfsadasdf",
             deviceId: "a1",
             originalFileName: "koala.jpeg",
             type: MediaType.PHOTO,

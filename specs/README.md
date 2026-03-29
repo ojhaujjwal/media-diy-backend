@@ -8,8 +8,14 @@ This directory contains all project specifications, organized by category.
 specs/
 ├── architecture/       # System architecture documentation
 ├── guides/             # Developer how-to guides
-└── README.md           # This file
+├── pending/            # Features not yet implemented
+├── completed/          # Historical reference (all work done)
+└── reference/          # External references
 ```
+
+## Naming Convention
+
+All files use lowercase with hyphens (e.g., `effect-patterns.md`, `clear-architecture.md`).
 
 ## Quick Links
 
@@ -43,6 +49,14 @@ Reference these to understand system design:
 
 ## What's In Each Section
 
+### guides/
+
+**Developer how-to documentation.** Use these as reference while coding:
+
+- How to write Effect code ([effect-patterns.md](guides/effect-patterns.md))
+- How to create HTTP handlers ([http-guide.md](guides/http-guide.md))
+- How to write tests ([testing-guide.md](guides/testing-guide.md))
+
 ### architecture/
 
 **System design documentation.** Reference these to understand:
@@ -52,17 +66,42 @@ Reference these to understand system design:
 - How errors flow through the system ([error-handling.md](architecture/error-handling.md))
 - Key architectural decisions
 
-### guides/
+### pending/
 
-**Developer how-to documentation.** Use these as reference while coding:
+**Features not yet implemented.** Each file describes work that needs to be done with implementation phases.
 
-- How to write Effect code ([effect-patterns.md](guides/effect-patterns.md))
-- How to create HTTP handlers ([http-guide.md](guides/http-guide.md))
-- How to write tests ([testing-guide.md](guides/testing-guide.md))
+### completed/
+
+**Historical reference.** Completed implementation specs kept for context about how features were built.
+
+### reference/
+
+**External references.** Documentation about reference repositories used in the project.
 
 ## Maintenance
 
 - **Guides** are living documents - update them as patterns evolve
+- **Pending** specs should be moved to **Completed** when finished
 - **Architecture** specs should be updated when the architecture changes
 - Add new guides for new topics
 - Keep guides focused and practical
+
+### Pending Implementation
+
+| Document                                                       | Description                                                               | Complexity |
+| -------------------------------------------------------------- | ------------------------------------------------------------------------- | ---------- |
+| [pending/upload-client-plan.md](pending/upload-client-plan.md) | CLI client to bulk upload media files with server-side hash deduplication | High       |
+
+### Completed (Historical Reference)
+
+These specs document completed work. Kept for historical context and reference.
+
+| Document   | Completed |
+| ---------- | --------- |
+| (none yet) |           |
+
+### Reference
+
+| Document         | Description |
+| ---------------- | ----------- |
+| (none currently) |             |

@@ -9,6 +9,7 @@
     "build": "tsc",
     "typecheck": "tsc --noEmit",
     "dev": "nodemon --exec 'tsx -r dotenv/config' --watch src/ src/http/run-server.ts",
+    "upload": "tsx src/cli/upload-media-client.ts",
     "format": "prettier ./src ./tests --write",
     "lint": "eslint ./src ./tests",
     "prepare": "effect-language-service patch"

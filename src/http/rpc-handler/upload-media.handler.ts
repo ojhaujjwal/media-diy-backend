@@ -23,10 +23,9 @@ export const uploadMediaHandler = (request: UploadMediaRequest) =>
     );
 
     if (!isFileExist) {
-      return yield*
-        new UploadMediaError({
-          errorCode: UPLOAD_MEDIA_ERROR_CODE.MEDIA_NOT_FOUND,
-        });
+      return yield* new UploadMediaError({
+        errorCode: UPLOAD_MEDIA_ERROR_CODE.MEDIA_NOT_FOUND,
+      });
     }
 
     const ownerUserId = "a208ada0-8862-4ede-b45d-8ec34742bbbd";
@@ -51,7 +50,7 @@ export const uploadMediaHandler = (request: UploadMediaRequest) =>
       originalFileName: request.originalFileName,
       deviceId: request.deviceId,
       filePath: request.filePath,
-      md5Hash: request.md5Hash, // todo: check md5 hash
+      sha256Hash: request.sha256Hash,
       type: request.type,
       capturedAt: request.capturedAt,
       uploadedAt: new Date(),
