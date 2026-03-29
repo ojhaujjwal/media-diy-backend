@@ -46,7 +46,9 @@ export const uploadMediaRouteHandler = Rpc.effect<
           }),
         ),
       ),
-      Effect.catchTag("MediaMetadataRepositoryError", () => Effect.void),
+      Effect.catchTag("MediaMetadataRepositoryError", (e) =>
+        e.reason === "RecordNotFound" ? Effect.void : Effect.fail(e),
+      ),
     );
 
     yield* mediaMetadataRepository.create({

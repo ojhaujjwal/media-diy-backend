@@ -39,6 +39,7 @@ const MediaContentsRepositoryMock = Layer.succeed(
 );
 
 const DynamoDBClientConfigLayer = Layer.succeed(DynamoDBClientInstanceConfig, {
+  /* eslint-disable local/no-type-assertion, @typescript-eslint/consistent-type-assertions  */
   region: process.env.AWS_REGION as string,
   credentials: {
     accessKeyId: process.env.AWS_ACCESS_KEY_ID as string,
@@ -47,6 +48,7 @@ const DynamoDBClientConfigLayer = Layer.succeed(DynamoDBClientInstanceConfig, {
   ...(process.env.AWS_DYNAMODB_ENDPOINT && {
     endpoint: process.env.AWS_DYNAMODB_ENDPOINT,
   }),
+  /* eslint-enable local/no-type-assertion, @typescript-eslint/consistent-type-assertions  */
 });
 
 const testLayers = Layer.mergeAll(

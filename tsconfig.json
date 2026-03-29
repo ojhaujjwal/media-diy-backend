@@ -17,7 +17,14 @@
     "forceConsistentCasingInFileNames": false,
     "noFallthroughCasesInSwitch": false,
     "exactOptionalPropertyTypes": true,
-    "types": ["vitest/globals"]
+    "noUnusedLocals": true,
+    "noImplicitOverride": true,
+    "types": ["vitest/globals"],
+    "plugins": [
+      {
+        "name": "@effect/language-service"
+      }
+    ]
   },
   "include": ["src"],
   "exclude": ["node_modules"]

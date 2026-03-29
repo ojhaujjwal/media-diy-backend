@@ -1,4 +1,4 @@
-import { Effect, Layer } from "effect";
+import { Config, Effect, Layer } from "effect";
 import {
   MediaMetadataRepository,
   MediaMetadataRepositoryError,
@@ -6,15 +6,43 @@ import {
 import { MediaMetadata, MediaType } from "../../domain/model/media";
 import { DynamoDBService } from "@effect-aws/client-dynamodb";
 
-const tableName = process.env.AWS_DYNAMODB_TABLE as string;
+const tableName = Effect.runSync(Config.string("AWS_DYNAMODB_TABLE"));
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AttributeValue = { S: string } | { N: string } | any;
+
+const getDynamoString = (attr: AttributeValue): Effect.Effect<string> => {
+  if (
+    attr &&
+    typeof attr === "object" &&
+    "S" in attr &&
+    typeof attr.S === "string"
+  ) {
+    return Effect.succeed(attr.S);
+  }
+  return Effect.die("Expected DynamoDB string attribute");
+};
+
+const MEDIA_TYPE_VALUES: readonly string[] = Object.values(MediaType);
+
+const isValidMediaType = (value: string): value is MediaType => {
+  return MEDIA_TYPE_VALUES.includes(value);
+};
+
+const parseMediaType = (value: string): Effect.Effect<MediaType> => {
+  if (isValidMediaType(value)) {
+    return Effect.succeed(value);
+  }
+  return Effect.die(`Invalid MediaType: ${value}`);
+};
 
 export const MediaMetadataRepositoryLive = Layer.succeed(
   MediaMetadataRepository,
   MediaMetadataRepository.of({
     create: (mediaMetadata: MediaMetadata) =>
-      Effect.all([DynamoDBService]).pipe(
-        Effect.flatMap(([dynamoDBService]) => {
-          return dynamoDBService.putItem({
+      DynamoDBService.pipe(
+        Effect.flatMap((dynamoDBService) =>
+          dynamoDBService.putItem({
             TableName: tableName,
             Item: {
               HashKey: { S: `User-${mediaMetadata.ownerUserId}` },
@@ -27,26 +55,24 @@ export const MediaMetadataRepositoryLive = Layer.succeed(
               type: { S: mediaMetadata.type },
               capturedAt: { S: mediaMetadata.capturedAt.toISOString() },
               uploadedAt: { S: mediaMetadata.uploadedAt.toISOString() },
-
-              //todo: add exif
             },
-          });
-        }),
+          }),
+        ),
         Effect.flatMap(() => Effect.void),
-        Effect.catchAll((e) => {
-          return Effect.fail(
+        Effect.catchAll((e) =>
+          Effect.fail(
             new MediaMetadataRepositoryError({
               message: "Something went wrong",
               reason: "UnknownError",
               previous: e,
             }),
-          );
-        }),
+          ),
+        ),
       ),
 
     findById: (ownerUserId, mediaId) =>
-      Effect.all([DynamoDBService]).pipe(
-        Effect.flatMap(([dynamoDBService]) =>
+      DynamoDBService.pipe(
+        Effect.flatMap((dynamoDBService) =>
           dynamoDBService.getItem({
             TableName: tableName,
             Key: {
@@ -56,24 +82,7 @@ export const MediaMetadataRepositoryLive = Layer.succeed(
           }),
         ),
         Effect.flatMap((item) => {
-          if (item.Item) {
-            return Effect.succeed(
-              new MediaMetadata({
-                id: mediaId,
-                originalFileName: item.Item.originalFileName.S as string,
-                capturedAt: new Date(item.Item.capturedAt.S as string),
-                deviceId: item.Item.deviceId.S as string,
-                filePath: item.Item.filePath.S as string,
-
-                md5Hash: item.Item.md5Hash.S as string,
-                ownerUserId,
-                type: item.Item.type.S as MediaType,
-                uploadedAt: new Date(item.Item.uploadedAt.S as string),
-
-                //todo: add exif
-              }),
-            );
-          } else {
+          if (!item.Item) {
             return Effect.fail(
               new MediaMetadataRepositoryError({
                 message: "Record not found",
@@ -81,16 +90,44 @@ export const MediaMetadataRepositoryLive = Layer.succeed(
               }),
             );
           }
+
+          const itemData = item.Item;
+
+          return Effect.gen(function* () {
+            const originalFileName = yield* getDynamoString(
+              itemData.originalFileName,
+            );
+            const capturedAt = yield* getDynamoString(itemData.capturedAt);
+            const deviceId = yield* getDynamoString(itemData.deviceId);
+            const filePath = yield* getDynamoString(itemData.filePath);
+            const md5Hash = yield* getDynamoString(itemData.md5Hash);
+            const type = yield* getDynamoString(itemData.type);
+            const uploadedAt = yield* getDynamoString(itemData.uploadedAt);
+
+            const parsedType = yield* parseMediaType(type);
+
+            return new MediaMetadata({
+              id: mediaId,
+              originalFileName,
+              capturedAt: new Date(capturedAt),
+              deviceId,
+              filePath,
+              md5Hash,
+              ownerUserId,
+              type: parsedType,
+              uploadedAt: new Date(uploadedAt),
+            });
+          });
         }),
-        Effect.catchAll((e) => {
-          return Effect.fail(
+        Effect.catchAll((e) =>
+          Effect.fail(
             new MediaMetadataRepositoryError({
               message: "Something went wrong",
               reason: "UnknownError",
               previous: e,
             }),
-          );
-        }),
+          ),
+        ),
       ),
   }),
 );

@@ -77,7 +77,7 @@ describe("UploadMediaRequest", () => {
             deviceId: "a1",
             originalFileName: "koala.jpeg",
             type: MediaType.PHOTO,
-            filePath: filePath,
+            filePath,
             capturedAt: new Date(),
             id,
           }),
@@ -98,11 +98,12 @@ describe("UploadMediaRequest", () => {
             deviceId: "a1",
             originalFileName: "koala.jpeg",
             type: MediaType.PHOTO,
-            filePath: filePath,
+            filePath,
             capturedAt: new Date(),
             id,
           }),
         ).pipe(Effect.either);
+
         if (!Either.isLeft(failureOrSuccess)) {
           throw new Error(
             "Expected uploading the same media should fail, but got success.",

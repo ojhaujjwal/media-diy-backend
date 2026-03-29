@@ -1,4 +1,4 @@
-import { MediaFileExtension } from "../../domain/model/media";
+import type { MediaFileExtension } from "../../domain/model/media";
 import { Rpc } from "@effect/rpc";
 import { Effect } from "effect";
 import { MediaContentsRepository } from "../../domain/repository/media-contents.repository";

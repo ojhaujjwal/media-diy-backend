@@ -1,4 +1,5 @@
-import { Effect, Data, Context } from "effect";
+import type { Effect } from "effect";
+import { Data, Context } from "effect";
 
 export type ErrorReason = "UnknownError";
 
