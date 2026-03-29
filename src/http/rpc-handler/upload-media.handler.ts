@@ -38,6 +38,7 @@ export const uploadMediaRouteHandler = Rpc.effect<
 
     const mediaMetadataRepository = yield* MediaMetadataRepository;
 
+    // findById is used as an existence check: if record exists, fail; if not found, continue to create
     yield* mediaMetadataRepository.findById(ownerUserId, request.id).pipe(
       Effect.flatMap(() =>
         Effect.fail(

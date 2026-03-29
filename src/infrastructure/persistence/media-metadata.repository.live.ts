@@ -121,11 +121,13 @@ export const MediaMetadataRepositoryLive = Layer.succeed(
         }),
         Effect.catchAll((e) =>
           Effect.fail(
-            new MediaMetadataRepositoryError({
-              message: "Something went wrong",
-              reason: "UnknownError",
-              previous: e,
-            }),
+            e._tag === "MediaMetadataRepositoryError"
+              ? e
+              : new MediaMetadataRepositoryError({
+                  message: "Something went wrong",
+                  reason: "UnknownError",
+                  previous: e,
+                }),
           ),
         ),
       ),
