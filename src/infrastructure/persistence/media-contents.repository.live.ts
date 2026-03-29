@@ -7,51 +7,58 @@ import {
 
 const bucketName = Effect.runSync(Config.string("AWS_BUCKET_NAME"));
 
-export const MediaContentsRepositoryLive = Layer.succeed(
+export const MediaContentsRepositoryLive: Layer.Layer<
   MediaContentsRepository,
-  MediaContentsRepository.of({
-    isFileExist: (fromPath) =>
-      S3Service.pipe(
-        Effect.flatMap((s3Service) =>
-          s3Service.headObject({
+  never,
+  S3Service
+> = Layer.effect(
+  MediaContentsRepository,
+  Effect.gen(function* () {
+    const s3Service = yield* S3Service;
+
+    return MediaContentsRepository.of({
+      isFileExist: (fromPath) =>
+        Effect.gen(function* () {
+          yield* s3Service.headObject({
             Bucket: bucketName,
             Key: fromPath,
-          }),
-        ),
-        Effect.map(() => true),
-        Effect.catchTag("NotFound", () => Effect.succeed(false)),
-        Effect.catchAll((e) =>
-          Effect.fail(
-            new MediaContentsRepositoryError({
-              message: "Something went wrong",
-              reason: "UnknownError",
-              previous: e,
-            }),
+          });
+          return true;
+        }).pipe(
+          Effect.map(() => true),
+          Effect.catchTag("NotFound", () => Effect.succeed(false)),
+          Effect.catchAll((e) =>
+            Effect.fail(
+              new MediaContentsRepositoryError({
+                message: "Something went wrong",
+                reason: "UnknownError",
+                previous: e,
+              }),
+            ),
           ),
         ),
-      ),
 
-    generatePresignedUrlForUpload: (contentType, filePath) =>
-      S3Service.pipe(
-        Effect.flatMap((s3Service) =>
-          s3Service.putObject(
+      generatePresignedUrlForUpload: (contentType, filePath) =>
+        Effect.gen(function* () {
+          return yield* s3Service.putObject(
             {
               Bucket: bucketName,
               Key: filePath,
               ContentType: contentType,
             },
             { presigned: true },
+          );
+        }).pipe(
+          Effect.catchAll((e) =>
+            Effect.fail(
+              new MediaContentsRepositoryError({
+                message: "Something went wrong",
+                reason: "UnknownError",
+                previous: e,
+              }),
+            ),
           ),
         ),
-        Effect.catchAll((e) =>
-          Effect.fail(
-            new MediaContentsRepositoryError({
-              message: "Something went wrong",
-              reason: "UnknownError",
-              previous: e,
-            }),
-          ),
-        ),
-      ),
+    });
   }),
 );

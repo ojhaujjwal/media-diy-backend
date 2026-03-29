@@ -1,14 +1,19 @@
 import { Config, Effect, Layer } from "effect";
-import { S3ClientInstanceConfig, S3ServiceLayer } from "@effect-aws/client-s3";
+import { S3 } from "@effect-aws/client-s3";
+import { DynamoDB } from "@effect-aws/client-dynamodb";
 import { MediaContentsRepositoryLive } from "./infrastructure/persistence/media-contents.repository.live";
 import { MediaMetadataRepositoryLive } from "./infrastructure/persistence/media-metadata.repository.live";
-import {
-  DynamoDBClientInstanceConfig,
-  DynamoDBServiceLayer,
-} from "@effect-aws/client-dynamodb";
 import { PrettyLogger } from "effect-log";
 
-const loadConfig = () =>
+interface Config {
+  region: string;
+  accessKeyId: string;
+  secretAccessKey: string;
+  dynamoDbEndpoint: string | undefined;
+  s3Endpoint: string | undefined;
+}
+
+const loadConfig = (): Config =>
   Effect.runSync(
     Effect.gen(function* () {
       const dynamoDbEndpoint = yield* Config.option(
@@ -29,16 +34,7 @@ const loadConfig = () =>
 
 const config = loadConfig();
 
-const DynamoDBClientConfigLayer = Layer.succeed(DynamoDBClientInstanceConfig, {
-  region: config.region,
-  credentials: {
-    accessKeyId: config.accessKeyId,
-    secretAccessKey: config.secretAccessKey,
-  },
-  ...(config.dynamoDbEndpoint && { endpoint: config.dynamoDbEndpoint }),
-});
-
-const S3ClientConfigLayer = Layer.succeed(S3ClientInstanceConfig, {
+const S3ConfigLayer = S3.layer({
   forcePathStyle: true,
   region: config.region,
   credentials: {
@@ -48,20 +44,25 @@ const S3ClientConfigLayer = Layer.succeed(S3ClientInstanceConfig, {
   ...(config.s3Endpoint && { endpoint: config.s3Endpoint }),
 });
 
-const CustomDynamoDBServiceLayer = DynamoDBServiceLayer.pipe(
-  Layer.provide(DynamoDBClientConfigLayer),
+const DynamoDBConfigLayer = DynamoDB.layer({
+  region: config.region,
+  credentials: {
+    accessKeyId: config.accessKeyId,
+    secretAccessKey: config.secretAccessKey,
+  },
+  ...(config.dynamoDbEndpoint && { endpoint: config.dynamoDbEndpoint }),
+});
+
+export const S3Layer = Layer.provide(
+  MediaContentsRepositoryLive,
+  S3ConfigLayer,
 );
 
-export const CustomS3ServiceLayer = S3ServiceLayer.pipe(
-  Layer.provide(S3ClientConfigLayer),
+export const DynamoDBLayer = Layer.provide(
+  MediaMetadataRepositoryLive,
+  DynamoDBConfigLayer,
 );
 
 export default Layer.mergeAll(
-  ...([
-    PrettyLogger.layer({}),
-    MediaContentsRepositoryLive,
-    MediaMetadataRepositoryLive,
-    CustomS3ServiceLayer,
-    CustomDynamoDBServiceLayer,
-  ] as const),
+  ...([PrettyLogger.layer({}), S3Layer, DynamoDBLayer] as const),
 );

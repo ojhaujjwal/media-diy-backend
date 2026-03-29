@@ -18,11 +18,11 @@ export class MediaContentsRepository extends Context.Tag(
   {
     readonly isFileExist: (
       fromPath: string,
-    ) => Effect.Effect<boolean, MediaContentsRepositoryError, any>; //eslint-disable-line @typescript-eslint/no-explicit-any
+    ) => Effect.Effect<boolean, MediaContentsRepositoryError, never>;
 
     readonly generatePresignedUrlForUpload: (
       contentType: string,
       filePath: string,
-    ) => Effect.Effect<string, MediaContentsRepositoryError, any>; //eslint-disable-line @typescript-eslint/no-explicit-any
+    ) => Effect.Effect<string, MediaContentsRepositoryError, never>;
   }
 >() {}

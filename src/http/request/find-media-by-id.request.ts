@@ -1,4 +1,4 @@
-import { Schema as S } from "@effect/schema";
+import { Schema as S } from "effect";
 import { MediaType } from "../../domain/model/media";
 
 export enum ERROR_CODE {
@@ -24,10 +24,12 @@ export class FindMediaResponse extends S.Class<FindMediaResponse>(
 
 export class FindMediaByIdRequest extends S.TaggedRequest<FindMediaByIdRequest>()(
   "FindMediaByIdRequest",
-  FindMediaByIdError,
-  FindMediaResponse,
   {
-    ownerUserId: S.UUID,
-    id: S.UUID,
+    failure: FindMediaByIdError,
+    success: FindMediaResponse,
+    payload: {
+      ownerUserId: S.UUID,
+      id: S.UUID,
+    },
   },
 ) {}

@@ -1,94 +1,31 @@
-import * as Http from "@effect/platform/HttpClient";
-import { Resolver } from "@effect/rpc";
-import { HttpResolver } from "@effect/rpc-http";
-import { type ClientRouter } from "../../src/http/app-server-factory";
-import { UploadMediaRequest } from "../../src/http/request/upload-media.request";
+import { RpcClient, RpcSerialization } from "@effect/rpc";
+import { FetchHttpClient } from "@effect/platform";
+import { appServerFactory } from "../../src/http/app-server-factory";
 import { MediaType } from "../../src/domain/model/media";
-import { Effect, Either, Layer, Option } from "effect";
+import { Effect, Either, Layer, pipe } from "effect";
 import { describe, it, expect, beforeAll } from "@effect/vitest";
 import { randomUUID } from "crypto";
 import { NodeRuntime } from "@effect/platform-node";
-import { NodeHttpServer } from "@effect/platform-node";
-import * as HttpServer from "@effect/platform/HttpServer";
-import { HttpRouter } from "@effect/rpc-http";
-import { Router } from "@effect/rpc";
-import { uploadMediaRouteHandler } from "../../src/http/rpc-handler/upload-media.handler";
-import { generateUploadPresignedUrlHandler } from "../../src/http/rpc-handler/generate-upload-presigned-url.handler";
-import { findMediaByIdHandler } from "../../src/http/rpc-handler/find-media-by-id.handler";
-import { MediaContentsRepository } from "../../src/domain/repository/media-contents.repository";
-import { MediaMetadataRepositoryLive } from "../../src/infrastructure/persistence/media-metadata.repository.live";
-import {
-  DynamoDBClientInstanceConfig,
-  DynamoDBServiceLayer,
-} from "@effect-aws/client-dynamodb";
-import { PrettyLogger } from "effect-log";
-import { createServer } from "http";
+import { MediaRpcs } from "../../src/http/rpc-handler/rpc-definitions";
 
-const rpcRouter = Router.make(
-  uploadMediaRouteHandler,
-  generateUploadPresignedUrlHandler,
-  findMediaByIdHandler,
-);
-
-const MediaContentsRepositoryMock = Layer.succeed(
-  MediaContentsRepository,
-  MediaContentsRepository.of({
-    isFileExist: () => Effect.succeed(false),
-    generatePresignedUrlForUpload: () => Effect.succeed(""),
+const rpcClientLayer = pipe(
+  RpcClient.layerProtocolHttp({
+    url: "http://localhost:9030/rpc",
   }),
+  Layer.provide([FetchHttpClient.layer, RpcSerialization.layerJson]),
 );
-
-const DynamoDBClientConfigLayer = Layer.succeed(DynamoDBClientInstanceConfig, {
-  /* eslint-disable local/no-type-assertion, @typescript-eslint/consistent-type-assertions  */
-  region: process.env.AWS_REGION as string,
-  credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID as string,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY as string,
-  },
-  ...(process.env.AWS_DYNAMODB_ENDPOINT && {
-    endpoint: process.env.AWS_DYNAMODB_ENDPOINT,
-  }),
-  /* eslint-enable local/no-type-assertion, @typescript-eslint/consistent-type-assertions  */
-});
-
-const testLayers = Layer.mergeAll(
-  PrettyLogger.layer({}),
-  MediaContentsRepositoryMock,
-  MediaMetadataRepositoryLive,
-  DynamoDBServiceLayer.pipe(Layer.provide(DynamoDBClientConfigLayer)),
-);
-
-const rpcClientResolver = HttpResolver.make<ClientRouter>(
-  Http.client.fetchOk.pipe(
-    Http.client.mapRequest(
-      Http.request.prependUrl("http://localhost:9030/rpc"),
-    ),
-  ),
-);
-
-const rpcClient = Resolver.toClient(rpcClientResolver);
 
 describe("UploadMediaRequest", () => {
   beforeAll(() => {
-    const httpServerFactory = (serverPort: number) =>
-      HttpServer.router.empty.pipe(
-        HttpServer.router.post("/rpc", HttpRouter.toHttpApp(rpcRouter)),
-        HttpServer.server.serve(HttpServer.middleware.logger),
-        HttpServer.server.withLogAddress,
-        Layer.provide(
-          NodeHttpServer.server.layer(createServer, { port: serverPort }),
-        ),
-      );
-
-    NodeRuntime.runMain(
-      Layer.launch(httpServerFactory(9030)).pipe(Effect.provide(testLayers)),
-    );
+    NodeRuntime.runMain(appServerFactory(9030));
   });
 
   it.effect("should return fail if file not found", () =>
     Effect.gen(function* () {
-      const failureOrSuccess = yield* rpcClient(
-        new UploadMediaRequest({
+      const client = yield* RpcClient.make(MediaRpcs);
+
+      const failureOrSuccess = yield* client
+        .UploadMediaRequest({
           md5Hash: "asfsadasdf",
           deviceId: "a1",
           originalFileName: "file1.png",
@@ -96,18 +33,23 @@ describe("UploadMediaRequest", () => {
           filePath: "/a/file2.png",
           capturedAt: new Date(),
           id: randomUUID(),
-        }),
-      ).pipe(Effect.either);
+        })
+        .pipe(Effect.either);
 
       expect(Either.isLeft(failureOrSuccess)).toEqual(true);
 
       const error = Either.getLeft(failureOrSuccess);
 
-      if (!Option.isSome(error)) {
+      if (error._tag === "None") {
         throw new Error("Error should be present");
       }
 
-      expect(error.value.errorCode).toEqual("media_not_found");
-    }),
+      const err = error.value;
+      if (!("errorCode" in err)) {
+        throw new Error(`Expected error with errorCode, got: ${err._tag}`);
+      }
+
+      expect(err.errorCode).toEqual("media_not_found");
+    }).pipe(Effect.scoped, Effect.provide(rpcClientLayer)),
   );
 });

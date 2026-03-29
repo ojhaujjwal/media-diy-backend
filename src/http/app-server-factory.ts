@@ -1,36 +1,27 @@
 import { NodeHttpServer } from "@effect/platform-node";
-import * as Http from "@effect/platform/HttpServer";
-import { Router } from "@effect/rpc";
-import { HttpRouter } from "@effect/rpc-http";
+import { HttpRouter } from "@effect/platform";
+import * as RpcServer from "@effect/rpc/RpcServer";
+import * as RpcSerialization from "@effect/rpc/RpcSerialization";
+import { Layer, Logger, LogLevel } from "effect";
 import { createServer } from "http";
-import { Effect, Layer, Logger, LogLevel } from "effect";
 import layers from "../layers";
-import { uploadMediaRouteHandler } from "./rpc-handler/upload-media.handler";
-import { generateUploadPresignedUrlHandler } from "./rpc-handler/generate-upload-presigned-url.handler";
-import { findMediaByIdHandler } from "./rpc-handler/find-media-by-id.handler";
+import { MediaRpcs } from "./rpc-handler/rpc-definitions";
+import { MediaRpcLive } from "./rpc-handler/media-rpc-handlers";
 
-const rpcRouter = Router.make(
-  uploadMediaRouteHandler,
-  generateUploadPresignedUrlHandler,
-  findMediaByIdHandler,
-);
+const RpcLayer = RpcServer.layer(MediaRpcs).pipe(Layer.provide(MediaRpcLive));
 
-export type ClientRouter = typeof rpcRouter;
+const HttpProtocol = RpcServer.layerProtocolHttp({
+  path: "/rpc",
+}).pipe(Layer.provide(RpcSerialization.layerJson));
 
-export const httpServerFactory = (serverPort: number) =>
-  Http.router.empty.pipe(
-    Http.router.post("/rpc", HttpRouter.toHttpApp(rpcRouter)),
-    Http.server.serve(Http.middleware.logger),
-    Http.server.withLogAddress,
-    Layer.provide(
-      NodeHttpServer.server.layer(createServer, { port: serverPort }),
-    ),
-  );
+export type ClientRouter = typeof RpcLayer;
 
-export const appServerFactory = (
-  serverPort: number,
-): Effect.Effect<never, Http.error.ServeError, never> =>
-  Layer.launch(httpServerFactory(serverPort)).pipe(
-    Effect.provide(layers),
-    Logger.withMinimumLogLevel(LogLevel.Info),
+export const appServerFactory = (serverPort: number) =>
+  HttpRouter.Default.serve().pipe(
+    Layer.provide(RpcLayer),
+    Layer.provide(HttpProtocol),
+    Layer.provide(layers),
+    Layer.provide(NodeHttpServer.layer(createServer, { port: serverPort })),
+    Layer.provide(Logger.minimumLogLevel(LogLevel.Info)),
+    Layer.launch,
   );

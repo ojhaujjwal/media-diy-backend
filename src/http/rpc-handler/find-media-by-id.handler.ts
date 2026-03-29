@@ -1,16 +1,12 @@
-import { Rpc } from "@effect/rpc";
 import { MediaMetadataRepository } from "../../domain/repository/media-metadata.repository";
 import { Effect } from "effect";
+import type { FindMediaByIdRequest } from "../request/find-media-by-id.request";
 import {
   FindMediaByIdError,
-  FindMediaByIdRequest,
   ERROR_CODE,
-} from "../../http/request/find-media-by-id.request";
+} from "../request/find-media-by-id.request";
 
-export const findMediaByIdHandler = Rpc.effect<
-  FindMediaByIdRequest,
-  MediaMetadataRepository
->(FindMediaByIdRequest, (request: FindMediaByIdRequest) =>
+export const findMediaByIdHandler = (request: FindMediaByIdRequest) =>
   Effect.all([MediaMetadataRepository]).pipe(
     Effect.flatMap(([repo]) => repo.findById(request.ownerUserId, request.id)),
     Effect.flatMap((mediaMetadata) =>
@@ -35,5 +31,4 @@ export const findMediaByIdHandler = Rpc.effect<
         ),
       ),
     ),
-  ),
-);
+  );

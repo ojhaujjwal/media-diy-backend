@@ -1,4 +1,4 @@
-import { Schema as S } from "@effect/schema";
+import { Schema as S } from "effect";
 import { MediaFileExtensionSchema, MediaType } from "../../domain/model/media";
 
 export enum ERROR_CODE {
@@ -20,10 +20,12 @@ export class PresignedUrlResponse extends S.Class<PresignedUrlResponse>(
 
 export class GenerateUploadPresignedUrlequest extends S.TaggedRequest<GenerateUploadPresignedUrlequest>()(
   "GenerateUploadPresignedUrlequest",
-  GenerateUploadPresignedUrlError,
-  PresignedUrlResponse,
   {
-    mediaType: S.Enums(MediaType),
-    fileExtension: MediaFileExtensionSchema,
+    failure: GenerateUploadPresignedUrlError,
+    success: PresignedUrlResponse,
+    payload: {
+      mediaType: S.Enums(MediaType),
+      fileExtension: MediaFileExtensionSchema,
+    },
   },
 ) {}

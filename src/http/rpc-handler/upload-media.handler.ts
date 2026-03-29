@@ -1,11 +1,10 @@
-import { Rpc } from "@effect/rpc";
 import { Effect } from "effect";
 import { MediaContentsRepository } from "../../domain/repository/media-contents.repository";
+import type { UploadMediaRequest } from "../request/upload-media.request";
 import {
   UPLOAD_MEDIA_ERROR_CODE,
   UploadMediaError,
-  UploadMediaRequest,
-} from "../../http/request/upload-media.request";
+} from "../request/upload-media.request";
 import { MediaMetadataRepository } from "../../domain/repository/media-metadata.repository";
 import { errorHandler } from "./helpers";
 
@@ -15,10 +14,7 @@ const routeErrorHandler = errorHandler({
   }),
 });
 
-export const uploadMediaRouteHandler = Rpc.effect<
-  UploadMediaRequest,
-  MediaContentsRepository | MediaMetadataRepository
->(UploadMediaRequest, (request: UploadMediaRequest) =>
+export const uploadMediaHandler = (request: UploadMediaRequest) =>
   Effect.gen(function* () {
     const mediaContentsRepository = yield* MediaContentsRepository;
 
@@ -27,14 +23,14 @@ export const uploadMediaRouteHandler = Rpc.effect<
     );
 
     if (!isFileExist) {
-      yield* Effect.fail(
+      return yield* Effect.fail(
         new UploadMediaError({
           errorCode: UPLOAD_MEDIA_ERROR_CODE.MEDIA_NOT_FOUND,
         }),
       );
     }
 
-    const ownerUserId = "a208ada0-8862-4ede-b45d-8ec34742bbbd"; // TODO: infer the user id from the authentication context;
+    const ownerUserId = "a208ada0-8862-4ede-b45d-8ec34742bbbd";
 
     const mediaMetadataRepository = yield* MediaMetadataRepository;
 
@@ -61,7 +57,6 @@ export const uploadMediaRouteHandler = Rpc.effect<
       capturedAt: request.capturedAt,
       uploadedAt: new Date(),
       id: request.id,
-
       ownerUserId,
     });
   }).pipe(
@@ -70,5 +65,4 @@ export const uploadMediaRouteHandler = Rpc.effect<
       MediaContentsRepositoryError: routeErrorHandler,
     }),
     Effect.catchAllDefect(routeErrorHandler),
-  ),
-);
+  );

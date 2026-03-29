@@ -36,13 +36,19 @@ const parseMediaType = (value: string): Effect.Effect<MediaType> => {
   return Effect.die(`Invalid MediaType: ${value}`);
 };
 
-export const MediaMetadataRepositoryLive = Layer.succeed(
+export const MediaMetadataRepositoryLive: Layer.Layer<
   MediaMetadataRepository,
-  MediaMetadataRepository.of({
-    create: (mediaMetadata: MediaMetadata) =>
-      DynamoDBService.pipe(
-        Effect.flatMap((dynamoDBService) =>
-          dynamoDBService.putItem({
+  never,
+  DynamoDBService
+> = Layer.effect(
+  MediaMetadataRepository,
+  Effect.gen(function* () {
+    const dynamoDBService = yield* DynamoDBService;
+
+    return MediaMetadataRepository.of({
+      create: (mediaMetadata: MediaMetadata) =>
+        Effect.gen(function* () {
+          yield* dynamoDBService.putItem({
             TableName: tableName,
             Item: {
               HashKey: { S: `User-${mediaMetadata.ownerUserId}` },
@@ -56,34 +62,32 @@ export const MediaMetadataRepositoryLive = Layer.succeed(
               capturedAt: { S: mediaMetadata.capturedAt.toISOString() },
               uploadedAt: { S: mediaMetadata.uploadedAt.toISOString() },
             },
-          }),
-        ),
-        Effect.flatMap(() => Effect.void),
-        Effect.catchAll((e) =>
-          Effect.fail(
-            new MediaMetadataRepositoryError({
-              message: "Something went wrong",
-              reason: "UnknownError",
-              previous: e,
-            }),
+          });
+        }).pipe(
+          Effect.flatMap(() => Effect.void),
+          Effect.catchAll((e) =>
+            Effect.fail(
+              new MediaMetadataRepositoryError({
+                message: "Something went wrong",
+                reason: "UnknownError",
+                previous: e,
+              }),
+            ),
           ),
         ),
-      ),
 
-    findById: (ownerUserId, mediaId) =>
-      DynamoDBService.pipe(
-        Effect.flatMap((dynamoDBService) =>
-          dynamoDBService.getItem({
+      findById: (ownerUserId, mediaId) =>
+        Effect.gen(function* () {
+          const item = yield* dynamoDBService.getItem({
             TableName: tableName,
             Key: {
               HashKey: { S: `User-${ownerUserId}` },
               RangeKey: { S: `MediaMetadata-${mediaId}` },
             },
-          }),
-        ),
-        Effect.flatMap((item) => {
+          });
+
           if (!item.Item) {
-            return Effect.fail(
+            return yield* Effect.fail(
               new MediaMetadataRepositoryError({
                 message: "Record not found",
                 reason: "RecordNotFound",
@@ -93,43 +97,42 @@ export const MediaMetadataRepositoryLive = Layer.succeed(
 
           const itemData = item.Item;
 
-          return Effect.gen(function* () {
-            const originalFileName = yield* getDynamoString(
-              itemData.originalFileName,
-            );
-            const capturedAt = yield* getDynamoString(itemData.capturedAt);
-            const deviceId = yield* getDynamoString(itemData.deviceId);
-            const filePath = yield* getDynamoString(itemData.filePath);
-            const md5Hash = yield* getDynamoString(itemData.md5Hash);
-            const type = yield* getDynamoString(itemData.type);
-            const uploadedAt = yield* getDynamoString(itemData.uploadedAt);
+          const originalFileName = yield* getDynamoString(
+            itemData.originalFileName,
+          );
+          const capturedAt = yield* getDynamoString(itemData.capturedAt);
+          const deviceId = yield* getDynamoString(itemData.deviceId);
+          const filePath = yield* getDynamoString(itemData.filePath);
+          const md5Hash = yield* getDynamoString(itemData.md5Hash);
+          const type = yield* getDynamoString(itemData.type);
+          const uploadedAt = yield* getDynamoString(itemData.uploadedAt);
 
-            const parsedType = yield* parseMediaType(type);
+          const parsedType = yield* parseMediaType(type);
 
-            return new MediaMetadata({
-              id: mediaId,
-              originalFileName,
-              capturedAt: new Date(capturedAt),
-              deviceId,
-              filePath,
-              md5Hash,
-              ownerUserId,
-              type: parsedType,
-              uploadedAt: new Date(uploadedAt),
-            });
+          return new MediaMetadata({
+            id: mediaId,
+            originalFileName,
+            capturedAt: new Date(capturedAt),
+            deviceId,
+            filePath,
+            md5Hash,
+            ownerUserId,
+            type: parsedType,
+            uploadedAt: new Date(uploadedAt),
           });
-        }),
-        Effect.catchAll((e) =>
-          Effect.fail(
-            e._tag === "MediaMetadataRepositoryError"
-              ? e
-              : new MediaMetadataRepositoryError({
-                  message: "Something went wrong",
-                  reason: "UnknownError",
-                  previous: e,
-                }),
+        }).pipe(
+          Effect.catchAll((e) =>
+            Effect.fail(
+              e._tag === "MediaMetadataRepositoryError"
+                ? e
+                : new MediaMetadataRepositoryError({
+                    message: "Something went wrong",
+                    reason: "UnknownError",
+                    previous: e,
+                  }),
+            ),
           ),
         ),
-      ),
+    });
   }),
 );

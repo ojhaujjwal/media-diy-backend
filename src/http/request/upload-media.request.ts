@@ -1,4 +1,4 @@
-import { Schema as S } from "@effect/schema";
+import { Schema as S } from "effect";
 import { MediaType } from "../../domain/model/media";
 
 export enum UPLOAD_MEDIA_ERROR_CODE {
@@ -16,15 +16,17 @@ export class UploadMediaError extends S.TaggedError<UploadMediaError>()(
 
 export class UploadMediaRequest extends S.TaggedRequest<UploadMediaRequest>()(
   "UploadMediaRequest",
-  UploadMediaError,
-  S.Void,
   {
-    md5Hash: S.String,
-    originalFileName: S.String,
-    type: S.Enums(MediaType),
-    deviceId: S.String,
-    filePath: S.String,
-    capturedAt: S.Date,
-    id: S.UUID,
+    failure: UploadMediaError,
+    success: S.Void,
+    payload: {
+      md5Hash: S.String,
+      originalFileName: S.String,
+      type: S.Enums(MediaType),
+      deviceId: S.String,
+      filePath: S.String,
+      capturedAt: S.Date,
+      id: S.UUID,
+    },
   },
 ) {}

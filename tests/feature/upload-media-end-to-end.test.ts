@@ -1,99 +1,81 @@
-import * as Http from "@effect/platform/HttpClient";
-import { Resolver } from "@effect/rpc";
-import { HttpResolver } from "@effect/rpc-http";
-import type { ClientRouter } from "../../src/http/app-server-factory";
+import * as HttpClient from "@effect/platform/HttpClient";
+import * as HttpClientRequest from "@effect/platform/HttpClientRequest";
+import { FetchHttpClient } from "@effect/platform";
+import { RpcClient, RpcSerialization } from "@effect/rpc";
 import { appServerFactory } from "../../src/http/app-server-factory";
-import {
-  UPLOAD_MEDIA_ERROR_CODE,
-  UploadMediaRequest,
-} from "../../src/http/request/upload-media.request";
+import { UPLOAD_MEDIA_ERROR_CODE } from "../../src/http/request/upload-media.request";
 import { MediaType } from "../../src/domain/model/media";
-import { Effect, Either } from "effect";
-import { GenerateUploadPresignedUrlequest } from "../../src/http/request/generate-upload-presigned-url.request";
-import { pipe } from "effect";
+import { Effect, Either, Layer, pipe } from "effect";
 import * as NodeClient from "@effect/platform-node/NodeHttpClient";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import { describe, expect, it, beforeAll } from "@effect/vitest";
 import { FileSystem } from "@effect/platform";
-import { stream } from "@effect/platform/Http/Body";
 import { randomUUID } from "crypto";
-import { FindMediaByIdRequest } from "../../src/http/request/find-media-by-id.request";
 import { NodeRuntime } from "@effect/platform-node";
+import { MediaRpcs } from "../../src/http/rpc-handler/rpc-definitions";
 
-const rpcClientResolver = HttpResolver.make<ClientRouter>(
-  Http.client.fetchOk.pipe(
-    Http.client.mapRequest(
-      Http.request.prependUrl("http://localhost:9020/rpc"),
-    ),
-  ),
+const rpcClientLayer = pipe(
+  RpcClient.layerProtocolHttp({
+    url: "http://localhost:9020/rpc",
+  }),
+  Layer.provide([FetchHttpClient.layer, RpcSerialization.layerJson]),
 );
-
-const rpcClient = Resolver.toClient(rpcClientResolver);
 
 describe("UploadMediaRequest", () => {
   beforeAll(() => {
-    NodeRuntime.runMain(
-      appServerFactory(9020), //TODO: generate random available port instead
-    );
+    NodeRuntime.runMain(appServerFactory(9020));
   });
 
   describe("GenerateUploadPresignedUrlRequest and then UploadMediaRequest", () => {
     it("should generate the URL with valid request and then upload the media and then fail when uploading the same media", () =>
       Effect.gen(function* () {
-        rpcClient(
-          new GenerateUploadPresignedUrlequest({
-            mediaType: MediaType.PHOTO,
-            fileExtension: "jpeg",
-          }),
-        );
+        const client = yield* RpcClient.make(MediaRpcs);
 
-        const { presignedUrl, filePath } = yield* rpcClient(
-          new GenerateUploadPresignedUrlequest({
+        yield* client.GenerateUploadPresignedUrlequest({
+          mediaType: MediaType.PHOTO,
+          fileExtension: "jpeg",
+        });
+
+        const { presignedUrl, filePath } =
+          yield* client.GenerateUploadPresignedUrlequest({
             mediaType: MediaType.PHOTO,
             fileExtension: "jpeg",
-          }),
-        );
-        const client = yield* Http.client.Client;
+          });
+        const httpClient = yield* HttpClient.HttpClient;
         const fs = yield* FileSystem.FileSystem;
         const { size: fileSizeInBytes } = yield* fs.stat(
           "./tests/assets/koala.jpeg",
         );
 
-        const uploadMediaResponse = yield* pipe(
-          Http.request.put(presignedUrl, {
-            body: stream(fs.stream("./tests/assets/koala.jpeg")),
-            headers: { "Content-Length": fileSizeInBytes.toString() },
+        const req = HttpClientRequest.put(presignedUrl).pipe(
+          HttpClientRequest.bodyStream(fs.stream("./tests/assets/koala.jpeg"), {
+            contentLength: Number(fileSizeInBytes),
           }),
-          client,
-          Effect.scoped,
         );
+        const uploadMediaResponse = yield* httpClient.execute(req);
         expect(uploadMediaResponse.status).toEqual(200);
 
         const id = randomUUID();
 
-        yield* rpcClient(
-          new UploadMediaRequest({
-            md5Hash: "asfsadasdf",
-            deviceId: "a1",
-            originalFileName: "koala.jpeg",
-            type: MediaType.PHOTO,
-            filePath,
-            capturedAt: new Date(),
-            id,
-          }),
-        );
+        yield* client.UploadMediaRequest({
+          md5Hash: "asfsadasdf",
+          deviceId: "a1",
+          originalFileName: "koala.jpeg",
+          type: MediaType.PHOTO,
+          filePath,
+          capturedAt: new Date(),
+          id,
+        });
 
-        const mediaResponse = yield* rpcClient(
-          new FindMediaByIdRequest({
-            id,
-            ownerUserId: "a208ada0-8862-4ede-b45d-8ec34742bbbd",
-          }),
-        );
+        const mediaResponse = yield* client.FindMediaByIdRequest({
+          id,
+          ownerUserId: "a208ada0-8862-4ede-b45d-8ec34742bbbd",
+        });
 
         expect(mediaResponse.id).toEqual(id);
 
-        const failureOrSuccess = yield* rpcClient(
-          new UploadMediaRequest({
+        const failureOrSuccess = yield* client
+          .UploadMediaRequest({
             md5Hash: "asfsadasdf",
             deviceId: "a1",
             originalFileName: "koala.jpeg",
@@ -101,8 +83,8 @@ describe("UploadMediaRequest", () => {
             filePath,
             capturedAt: new Date(),
             id,
-          }),
-        ).pipe(Effect.either);
+          })
+          .pipe(Effect.either);
 
         if (!Either.isLeft(failureOrSuccess)) {
           throw new Error(
@@ -110,10 +92,17 @@ describe("UploadMediaRequest", () => {
           );
         }
 
-        expect(failureOrSuccess.left.errorCode).toEqual(
+        const error = failureOrSuccess.left;
+        if (!("errorCode" in error)) {
+          throw new Error(`Expected error with errorCode, got: ${error._tag}`);
+        }
+
+        expect(error.errorCode).toEqual(
           UPLOAD_MEDIA_ERROR_CODE.MEDIA_ALREADY_EXISTS,
         );
       }).pipe(
+        Effect.scoped,
+        Effect.provide(rpcClientLayer),
         Effect.provide(NodeClient.layer),
         Effect.provide(NodeFileSystem.layer),
         Effect.runPromise,
