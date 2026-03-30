@@ -24,7 +24,7 @@ set -e
 set -o pipefail
 
 # Parse arguments
-DEFAULT_MODEL="opencode-go/kimi-k2"
+DEFAULT_MODEL="opencode-go/minimax-2.7"
 MODEL="$DEFAULT_MODEL"
 SKIP_CHECKS=false
 FOCUS_PROMPT=""
@@ -311,6 +311,34 @@ $test_output
 \`\`\`
 
 "
+    fi
+
+    # Check changed files for eslint-disable
+    echo ""
+    echo "5. Checking for eslint-disable in changed files..."
+    echo "---------------------------------------------------"
+    local eslint_bypass_output
+    eslint_bypass_output=$(git diff --cached --name-only --diff-filter=ACM 2>/dev/null | grep -E '\.(ts|tsx)$' | xargs -r grep -l 'eslint-disable' 2>/dev/null || true)
+    if [ -z "$eslint_bypass_output" ]; then
+        eslint_bypass_output=$(git diff --name-only --diff-filter=ACM 2>/dev/null | grep -E '\.(ts|tsx)$' | xargs -r grep -l 'eslint-disable' 2>/dev/null || true)
+    fi
+    if [ -n "$eslint_bypass_output" ]; then
+        echo -e "${RED}Found eslint-disable comments in changed files${NC}"
+        echo "$eslint_bypass_output"
+        ci_failed=1
+        error_output+="## ESLint Bypass Detected
+
+The following files contain \`eslint-disable\` comments which are not allowed:
+
+\`\`\`
+$eslint_bypass_output
+\`\`\`
+
+Fix the underlying issues instead of disabling lint rules.
+
+"
+    else
+        echo -e "${GREEN}No eslint-disable in changed files${NC}"
     fi
 
     # Summary
