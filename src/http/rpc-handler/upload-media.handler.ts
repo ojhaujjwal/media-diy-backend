@@ -1,5 +1,4 @@
 import { Effect } from "effect";
-import { MediaContentsRepository } from "../../domain/repository/media-contents.repository";
 import type { UploadMediaRequest } from "../request/upload-media.request";
 import {
   UPLOAD_MEDIA_ERROR_CODE,
@@ -16,18 +15,6 @@ const routeErrorHandler = errorHandler({
 
 export const uploadMediaHandler = (request: UploadMediaRequest) =>
   Effect.gen(function* () {
-    const mediaContentsRepository = yield* MediaContentsRepository;
-
-    const isFileExist = yield* mediaContentsRepository.isFileExist(
-      request.filePath,
-    );
-
-    if (!isFileExist) {
-      return yield* new UploadMediaError({
-        errorCode: UPLOAD_MEDIA_ERROR_CODE.MEDIA_NOT_FOUND,
-      });
-    }
-
     const ownerUserId = "a208ada0-8862-4ede-b45d-8ec34742bbbd";
 
     const mediaMetadataRepository = yield* MediaMetadataRepository;
@@ -60,7 +47,6 @@ export const uploadMediaHandler = (request: UploadMediaRequest) =>
   }).pipe(
     Effect.catchTags({
       MediaMetadataRepositoryError: routeErrorHandler,
-      MediaContentsRepositoryError: routeErrorHandler,
     }),
     Effect.catchAllDefect(routeErrorHandler),
   );

@@ -1,5 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, local/no-type-assertion, @typescript-eslint/consistent-type-assertions */
-import { Effect, Chunk, Console } from "effect";
+import { Effect, Chunk, Console, Layer, pipe } from "effect";
 import * as RpcClient from "@effect/rpc/RpcClient";
 import * as RpcSerialization from "@effect/rpc/RpcSerialization";
 import * as FetchHttpClient from "@effect/platform/FetchHttpClient";
@@ -7,9 +6,46 @@ import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodeClient from "@effect/platform-node/NodeHttpClient";
 import { MediaRpcs } from "../http/rpc-handler/rpc-definitions";
 import { MediaType, FILE_EXTENSION_MAPPING } from "../domain/model/media";
+import { ERROR_CODE } from "../http/request/find-media-by-hash.request";
 import * as fs from "fs/promises";
 import * as path from "path";
 import * as crypto from "crypto";
+
+const parseArgs = (
+  args: string[],
+): {
+  directory: string;
+  deviceId: string;
+  serverUrl: string;
+  dryRun: boolean;
+} => {
+  const directory = args[2];
+  if (!directory) {
+    console.error(
+      "Usage: tsx src/cli/upload-media-client.ts <directory> [--device-id <id>] [--server-url <url>] [--dry-run]",
+    );
+    process.exit(1);
+  }
+
+  let deviceId = "device-001";
+  let serverUrl = "http://localhost:3000/rpc";
+  let dryRun = false;
+
+  for (let i = 3; i < args.length; i++) {
+    const arg = args[i];
+    if (arg === "--device-id" && i + 1 < args.length) {
+      deviceId = args[++i];
+    } else if (arg === "--server-url" && i + 1 < args.length) {
+      serverUrl = args[++i];
+    } else if (arg === "--dry-run") {
+      dryRun = true;
+    }
+  }
+
+  return { directory, deviceId, serverUrl, dryRun };
+};
+
+const { directory, deviceId, serverUrl, dryRun } = parseArgs(process.argv);
 
 const flattenExtensions = (
   mapping: Record<MediaType, readonly string[]>,
@@ -67,144 +103,126 @@ interface CliOptions {
   dryRun: boolean;
 }
 
-const processFile =
-  (client: RpcClient.FromGroup<typeof MediaRpcs>, options: CliOptions) =>
-  (filePath: string): Effect.Effect<void> => {
-    const filename = path.basename(filePath);
+const getMediaTypeFromExtension = (ext: string): MediaType => {
+  const videoExtensions = FILE_EXTENSION_MAPPING[MediaType.VIDEO];
+  const livePhotoExtensions = FILE_EXTENSION_MAPPING[MediaType.LIVE_PHOTO];
 
-    if (!isValidMediaFile(filename)) {
-      return Console.log(`Skipping ${filename}: unsupported extension`);
+  for (const videoExt of videoExtensions) {
+    if (videoExt.toLowerCase() === ext.toLowerCase()) {
+      return MediaType.VIDEO;
     }
+  }
 
-    return computeSha256(filePath).pipe(
-      Effect.flatMap((sha256Hash) => {
-        const findRequest = client.FindMediaByHashRequest({ sha256Hash });
+  for (const livePhotoExt of livePhotoExtensions) {
+    if (livePhotoExt.toLowerCase() === ext.toLowerCase()) {
+      return MediaType.LIVE_PHOTO;
+    }
+  }
 
-        return Effect.flatMap(findRequest, () =>
-          Console.log(`Skipped (already uploaded): ${filename}`),
-        ).pipe(
-          Effect.catchAll((error) => {
-            const err = error as { _tag?: string; errorCode?: string };
-            if (
-              err._tag === "FindMediaByHashError" &&
-              err.errorCode === "not_found"
-            ) {
-              if (options.dryRun) {
-                return Console.log(
-                  `[DRY RUN] Would upload: ${filename} (hash: ${sha256Hash})`,
-                );
-              }
-
-              return getFileStats(filePath).pipe(
-                Effect.flatMap(({ mtime }) => {
-                  const id = crypto.randomUUID();
-                  const ext = getFileExtension(filename);
-
-                  let mediaType: MediaType;
-                  if (
-                    FILE_EXTENSION_MAPPING[MediaType.VIDEO].includes(
-                      ext as (typeof FILE_EXTENSION_MAPPING)[typeof MediaType.VIDEO][number],
-                    )
-                  ) {
-                    mediaType = MediaType.VIDEO;
-                  } else if (
-                    FILE_EXTENSION_MAPPING[MediaType.LIVE_PHOTO].includes(
-                      ext as (typeof FILE_EXTENSION_MAPPING)[typeof MediaType.LIVE_PHOTO][number],
-                    )
-                  ) {
-                    mediaType = MediaType.LIVE_PHOTO;
-                  } else {
-                    mediaType = MediaType.PHOTO;
-                  }
-
-                  const uploadRequest = client.UploadMediaRequest({
-                    id,
-                    originalFileName: filename,
-                    sha256Hash,
-                    type: mediaType,
-                    deviceId: options.deviceId,
-                    filePath,
-                    capturedAt: mtime,
-                  });
-
-                  return Effect.flatMap(uploadRequest, () =>
-                    Console.log(`Uploaded: ${filename} (id: ${id})`),
-                  ).pipe(
-                    Effect.catchAll((e) =>
-                      Console.error(
-                        `Error uploading ${filename}: ${JSON.stringify(e)}`,
-                      ),
-                    ),
-                  );
-                }),
-              );
-            }
-            return Console.error(
-              `Error checking hash for ${filename}: ${JSON.stringify(error)}`,
-            );
-          }),
-        );
-      }),
-      Effect.catchAll((e) =>
-        Console.error(`Error processing ${filename}: ${JSON.stringify(e)}`),
-      ),
-    );
-  };
-
-const processFiles =
-  (client: RpcClient.FromGroup<typeof MediaRpcs>, options: CliOptions) =>
-  (files: Chunk.Chunk<string>): Effect.Effect<void> => {
-    const sortedFiles = Chunk.toArray(files).sort();
-    return Effect.forEach(sortedFiles, (file) =>
-      processFile(client, options)(file),
-    );
-  };
-
-const program = (options: CliOptions): any => {
-  const clientPromise = RpcClient.make(MediaRpcs);
-
-  const initStep = Console.log(`Scanning directory: ${options.directory}`).pipe(
-    Effect.flatMap(() => Console.log(`Server: ${options.serverUrl}`)),
-    Effect.flatMap(() => Console.log(`Device ID: ${options.deviceId}`)),
-    Effect.flatMap(() =>
-      options.dryRun
-        ? Console.log("Mode: DRY RUN (no files will be uploaded)")
-        : Effect.void,
-    ),
-    Effect.flatMap(() => Console.log("")),
-  );
-
-  return (clientPromise as any).pipe(
-    Effect.flatMap((client: any) =>
-      initStep.pipe(
-        Effect.flatMap(() => scanDirectory(options.directory)),
-        Effect.flatMap((files) => {
-          const count = Chunk.size(files);
-          return Console.log(`Found ${count} files`).pipe(
-            Effect.flatMap(() => processFiles(client, options)(files) as any),
-          );
-        }),
-      ),
-    ),
-  );
+  return MediaType.PHOTO;
 };
 
-const rpcClientLayer = RpcClient.layerProtocolHttp({
-  url: "http://localhost:3000/rpc",
-});
+const program = (options: CliOptions) =>
+  Effect.gen(function* () {
+    const client = yield* RpcClient.make(MediaRpcs);
+
+    yield* Console.log(`Scanning directory: ${options.directory}`);
+    yield* Console.log(`Server: ${options.serverUrl}`);
+    yield* Console.log(`Device ID: ${options.deviceId}`);
+    if (options.dryRun) {
+      yield* Console.log("Mode: DRY RUN (no files will be uploaded)");
+    }
+    yield* Console.log("");
+
+    const files = yield* scanDirectory(options.directory);
+    const count = Chunk.size(files);
+    yield* Console.log(`Found ${count} files`);
+
+    const sortedFiles = Chunk.toArray(files).sort();
+
+    for (const filePath of sortedFiles) {
+      const filename = path.basename(filePath);
+
+      if (!isValidMediaFile(filename)) {
+        yield* Console.log(`Skipping ${filename}: unsupported extension`);
+        continue;
+      }
+
+      const sha256Hash = yield* computeSha256(filePath);
+
+      const findResult = yield* client
+        .FindMediaByHashRequest({ sha256Hash })
+        .pipe(Effect.either);
+
+      if (findResult._tag === "Right") {
+        yield* Console.log(`Skipped (already uploaded): ${filename}`);
+        continue;
+      }
+
+      const error = findResult.left;
+      if (
+        error._tag !== "FindMediaByHashError" ||
+        error.errorCode !== ERROR_CODE.NOT_FOUND
+      ) {
+        yield* Console.error(
+          `Error checking hash for ${filename}: ${JSON.stringify(error)}`,
+        );
+        continue;
+      }
+
+      if (options.dryRun) {
+        yield* Console.log(
+          `[DRY RUN] Would upload: ${filename} (hash: ${sha256Hash})`,
+        );
+        continue;
+      }
+
+      const stats = yield* getFileStats(filePath);
+      const id = crypto.randomUUID();
+      const ext = getFileExtension(filename);
+      const mediaType = getMediaTypeFromExtension(ext);
+
+      const uploadResult = yield* client
+        .UploadMediaRequest({
+          id,
+          originalFileName: filename,
+          sha256Hash,
+          type: mediaType,
+          deviceId: options.deviceId,
+          filePath,
+          capturedAt: stats.mtime,
+        })
+        .pipe(Effect.either);
+
+      if (uploadResult._tag === "Left") {
+        yield* Console.error(
+          `Error uploading ${filename}: ${JSON.stringify(uploadResult.left)}`,
+        );
+      } else {
+        yield* Console.log(`Uploaded: ${filename} (id: ${id})`);
+      }
+    }
+  });
+
+const rpcClientLayer = pipe(
+  RpcClient.layerProtocolHttp({
+    url: serverUrl,
+  }),
+  Layer.provide([FetchHttpClient.layer, RpcSerialization.layerJson]),
+);
+
+const allLayers = Layer.mergeAll(NodeClient.layer, NodeFileSystem.layer);
 
 const cli = program({
-  directory: "/Users/uo/Projects/media-diy-backend/test-media",
-  deviceId: "device-001",
-  serverUrl: "http://localhost:3000/rpc",
-  dryRun: true,
+  directory,
+  deviceId,
+  serverUrl,
+  dryRun,
 });
 
 Effect.runPromise(
   cli.pipe(
-    Effect.provide(rpcClientLayer),
-    Effect.provide([FetchHttpClient.layer, RpcSerialization.layerJson]),
-    Effect.provide(NodeClient.layer),
-    Effect.provide(NodeFileSystem.layer),
+    Effect.scoped,
+    Effect.provide(Layer.mergeAll(rpcClientLayer, allLayers)),
   ),
 );

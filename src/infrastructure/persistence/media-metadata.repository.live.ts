@@ -5,11 +5,9 @@ import {
 } from "../../domain/repository/media-metadata.repository";
 import { MediaMetadata, MediaType } from "../../domain/model/media";
 import { DynamoDBService } from "@effect-aws/client-dynamodb";
+import type { AttributeValue } from "@aws-sdk/client-dynamodb";
 
 const tableName = Effect.runSync(Config.string("AWS_DYNAMODB_TABLE"));
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type AttributeValue = { S: string } | { N: string } | any;
 
 const getDynamoString = (attr: AttributeValue): Effect.Effect<string> => {
   if (
@@ -66,14 +64,13 @@ export const MediaMetadataRepositoryLive: Layer.Layer<
           })
           .pipe(
             Effect.flatMap(() => Effect.void),
-            Effect.catchAll((e) =>
-              Effect.fail(
+            Effect.mapError(
+              (e) =>
                 new MediaMetadataRepositoryError({
                   message: "Something went wrong",
                   reason: "UnknownError",
                   previous: e,
                 }),
-              ),
             ),
           ),
 
@@ -120,16 +117,14 @@ export const MediaMetadataRepositoryLive: Layer.Layer<
             uploadedAt: new Date(uploadedAt),
           });
         }).pipe(
-          Effect.catchAll((e) =>
-            Effect.fail(
-              e._tag === "MediaMetadataRepositoryError"
-                ? e
-                : new MediaMetadataRepositoryError({
-                    message: "Something went wrong",
-                    reason: "UnknownError",
-                    previous: e,
-                  }),
-            ),
+          Effect.mapError((e) =>
+            e._tag === "MediaMetadataRepositoryError"
+              ? e
+              : new MediaMetadataRepositoryError({
+                  message: "Something went wrong",
+                  reason: "UnknownError",
+                  previous: e,
+                }),
           ),
         ),
 
@@ -181,16 +176,14 @@ export const MediaMetadataRepositoryLive: Layer.Layer<
             uploadedAt: new Date(uploadedAt),
           });
         }).pipe(
-          Effect.catchAll((e) =>
-            Effect.fail(
-              e._tag === "MediaMetadataRepositoryError"
-                ? e
-                : new MediaMetadataRepositoryError({
-                    message: "Something went wrong",
-                    reason: "UnknownError",
-                    previous: e,
-                  }),
-            ),
+          Effect.mapError((e) =>
+            e._tag === "MediaMetadataRepositoryError"
+              ? e
+              : new MediaMetadataRepositoryError({
+                  message: "Something went wrong",
+                  reason: "UnknownError",
+                  previous: e,
+                }),
           ),
         ),
     });

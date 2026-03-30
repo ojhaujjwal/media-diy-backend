@@ -27,19 +27,19 @@ export const MediaContentsRepositoryLive: Layer.Layer<
         }).pipe(
           Effect.map(() => true),
           Effect.catchTag("NotFound", () => Effect.succeed(false)),
-          Effect.catchAll((e) =>
-            Effect.fail(
+          Effect.mapError(
+            (e) =>
               new MediaContentsRepositoryError({
                 message: "Something went wrong",
                 reason: "UnknownError",
                 previous: e,
               }),
-            ),
           ),
         ),
 
       generatePresignedUrlForUpload: (contentType, filePath) =>
-        s3Service.putObject(
+        s3Service
+          .putObject(
             {
               Bucket: bucketName,
               Key: filePath,
@@ -48,14 +48,13 @@ export const MediaContentsRepositoryLive: Layer.Layer<
             { presigned: true },
           )
           .pipe(
-            Effect.catchAll((e) =>
-              Effect.fail(
+            Effect.mapError(
+              (e) =>
                 new MediaContentsRepositoryError({
                   message: "Something went wrong",
                   reason: "UnknownError",
                   previous: e,
                 }),
-              ),
             ),
           ),
     });
