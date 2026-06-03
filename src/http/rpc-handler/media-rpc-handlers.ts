@@ -8,7 +8,7 @@ import { findMediaByHashHandler } from "./find-media-by-hash.handler.js";
 export const MediaRpcLive = MediaRpcs.toLayer(
   Effect.succeed({
     UploadMediaRequest: uploadMediaHandler,
-    GenerateUploadPresignedUrlequest: generateUploadPresignedUrlHandler,
+    GenerateUploadPresignedUrlRequest: generateUploadPresignedUrlHandler,
     FindMediaByIdRequest: findMediaByIdHandler,
     FindMediaByHashRequest: findMediaByHashHandler
   })

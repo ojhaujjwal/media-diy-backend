@@ -6,22 +6,14 @@ export enum ERROR_CODE {
   NOT_FOUND = "not_found"
 }
 
-export class FindMediaByHashError extends S.TaggedError<FindMediaByHashError>()("FindMediaByHashError", {
-  errorCode: S.Enums(ERROR_CODE)
+export class FindMediaByHashError extends S.TaggedErrorClass<FindMediaByHashError>()("FindMediaByHashError", {
+  errorCode: S.Enum(ERROR_CODE)
 }) {}
 
 export class FindMediaByHashResponse extends S.Class<FindMediaByHashResponse>("FindMediaByHashResponse")({
-  id: S.UUID,
+  id: S.String.check(S.isUUID()),
   sha256Hash: S.String,
   filePath: S.String,
-  type: S.Enums(MediaType),
+  type: S.Enum(MediaType),
   capturedAt: S.Date
-}) {}
-
-export class FindMediaByHashRequest extends S.TaggedRequest<FindMediaByHashRequest>()("FindMediaByHashRequest", {
-  failure: FindMediaByHashError,
-  success: FindMediaByHashResponse,
-  payload: {
-    sha256Hash: S.String
-  }
 }) {}

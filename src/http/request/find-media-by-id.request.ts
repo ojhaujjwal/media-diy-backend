@@ -6,22 +6,13 @@ export enum ERROR_CODE {
   NOT_FOUND = "not_found"
 }
 
-export class FindMediaByIdError extends S.TaggedError<FindMediaByIdError>()("FindMediaByIdError", {
-  errorCode: S.Enums(ERROR_CODE)
+export class FindMediaByIdError extends S.TaggedErrorClass<FindMediaByIdError>()("FindMediaByIdError", {
+  errorCode: S.Enum(ERROR_CODE)
 }) {}
 
 export class FindMediaResponse extends S.Class<FindMediaResponse>("FindMediaResponse")({
-  id: S.UUID,
+  id: S.String.check(S.isUUID()),
   filePath: S.String,
-  type: S.Enums(MediaType),
+  type: S.Enum(MediaType),
   capturedAt: S.Date
-}) {}
-
-export class FindMediaByIdRequest extends S.TaggedRequest<FindMediaByIdRequest>()("FindMediaByIdRequest", {
-  failure: FindMediaByIdError,
-  success: FindMediaResponse,
-  payload: {
-    ownerUserId: S.UUID,
-    id: S.UUID
-  }
 }) {}

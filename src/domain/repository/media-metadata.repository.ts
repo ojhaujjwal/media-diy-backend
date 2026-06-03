@@ -1,22 +1,19 @@
 import type { MediaMetadata } from "../../domain/model/media.js";
 import type { Effect } from "effect";
-import { Data, Context } from "effect";
+import { Context, Schema as S } from "effect";
 
-export type ErrorReason = "UnknownError";
+export type ErrorReason = "UnknownError" | "RecordNotFound";
 
-export type FindByIdErrorReason = ErrorReason | "RecordNotFound";
+export class MediaMetadataRepositoryError extends S.TaggedErrorClass<MediaMetadataRepositoryError>()(
+  "MediaMetadataRepositoryError",
+  {
+    message: S.String,
+    reason: S.String,
+    previous: S.optional(S.Defect())
+  }
+) {}
 
-export type FindByHashErrorReason = ErrorReason | "RecordNotFound";
-
-export class MediaMetadataRepositoryError<T extends string = ErrorReason> extends Data.TaggedError(
-  "MediaMetadataRepositoryError"
-)<{
-  message: string;
-  reason: T;
-  previous?: Error;
-}> {}
-
-export class MediaMetadataRepository extends Context.Tag("MediaMetadataRepository")<
+export class MediaMetadataRepository extends Context.Service<
   MediaMetadataRepository,
   {
     readonly create: (MediaMetadata: MediaMetadata) => Effect.Effect<void, MediaMetadataRepositoryError, never>;
@@ -24,10 +21,8 @@ export class MediaMetadataRepository extends Context.Tag("MediaMetadataRepositor
     readonly findById: (
       ownerUserId: string,
       mediaId: string
-    ) => Effect.Effect<MediaMetadata, MediaMetadataRepositoryError<FindByIdErrorReason>, never>;
+    ) => Effect.Effect<MediaMetadata, MediaMetadataRepositoryError, never>;
 
-    readonly findByHash: (
-      sha256Hash: string
-    ) => Effect.Effect<MediaMetadata, MediaMetadataRepositoryError<FindByHashErrorReason>, never>;
+    readonly findByHash: (sha256Hash: string) => Effect.Effect<MediaMetadata, MediaMetadataRepositoryError, never>;
   }
->() {}
+>()("MediaMetadataRepository") {}

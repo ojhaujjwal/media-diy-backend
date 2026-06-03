@@ -1,9 +1,9 @@
-import { RpcClient, RpcSerialization } from "@effect/rpc";
-import { FetchHttpClient } from "@effect/platform";
+import { RpcClient, RpcSerialization } from "effect/unstable/rpc";
+import { FetchHttpClient } from "effect/unstable/http";
 import { appServerFactory } from "../../src/http/app-server-factory.js";
 import { MediaType } from "../../src/domain/model/media.js";
 import { UPLOAD_MEDIA_ERROR_CODE } from "../../src/http/request/upload-media.request.js";
-import { Effect, Either, Layer, pipe } from "effect";
+import { Effect, Layer, pipe, Result } from "effect";
 import { describe, it, expect, beforeAll } from "@effect/vitest";
 import { randomUUID } from "crypto";
 import { NodeRuntime } from "@effect/platform-node";
@@ -18,7 +18,7 @@ const rpcClientLayer = pipe(
 
 describe("UploadMediaRequest", () => {
   beforeAll(() => {
-    NodeRuntime.runMain(appServerFactory(9030));
+    NodeRuntime.runMain(appServerFactory(9030).pipe(Layer.launch));
   });
 
   it.effect("should return fail if media already exists", () =>
@@ -46,11 +46,11 @@ describe("UploadMediaRequest", () => {
           capturedAt: new Date(),
           id
         })
-        .pipe(Effect.either);
+        .pipe(Effect.result);
 
-      expect(Either.isLeft(failureOrSuccess)).toEqual(true);
+      expect(Result.isFailure(failureOrSuccess)).toEqual(true);
 
-      const error = Either.getLeft(failureOrSuccess);
+      const error = Result.getFailure(failureOrSuccess);
 
       if (error._tag === "None") {
         throw new Error("Error should be present");

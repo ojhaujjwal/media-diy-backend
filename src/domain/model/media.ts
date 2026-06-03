@@ -1,12 +1,14 @@
 import { Schema as S } from "effect";
 
-export enum MediaType {
-  PHOTO = "photo",
-  VIDEO = "video",
-  LIVE_PHOTO = "live_photo"
-}
+export const MediaType = {
+  PHOTO: "photo",
+  VIDEO: "video",
+  LIVE_PHOTO: "live_photo"
+} as const;
 
-export const MediaFileExtensionSchema = S.Literal("heic", "heif", "jpg", "jpeg", "png", "mp4", "mov");
+export type MediaType = (typeof MediaType)[keyof typeof MediaType];
+
+export const MediaFileExtensionSchema = S.Literals(["heic", "heif", "jpg", "jpeg", "png", "mp4", "mov"]);
 export type MediaFileExtension = S.Schema.Type<typeof MediaFileExtensionSchema>;
 
 export const FILE_EXTENSION_MAPPING: Record<MediaType, readonly MediaFileExtension[]> = {
@@ -41,10 +43,10 @@ export const ExifMetadata = S.Struct({
 });
 
 export class MediaMetadata extends S.Class<MediaMetadata>("MediaMetadata")({
-  id: S.UUID,
+  id: S.String.check(S.isUUID()),
   originalFileName: S.String,
   sha256Hash: S.String,
-  type: S.Enums(MediaType),
+  type: S.Enum(MediaType),
   deviceId: S.String,
   filePath: S.String,
   ownerUserId: S.String,

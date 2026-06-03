@@ -1,20 +1,20 @@
 ## Build & Run
 
-- Build: `npm run build`
-- Dev: `npm run dev`
-- Format: `npm run format`
-- Format check: `npm run format-check`
+- Build: `pnpm build`
+- Dev: `pnpm dev`
+- Format: `pnpm format`
+- Format check: `pnpm format-check`
 
 ## Validation
 
-- Typecheck: `npm run typecheck`
-- Lint: `npm run lint`
-- Test: `npm test`
+- Typecheck: `pnpm typecheck`
+- Lint: `pnpm lint`
+- Test: `pnpm test`
 
 ## CI Check (run before commit)
 
 ```
-npm run typecheck && npm run lint && npm run format-check && npm run build && npm test
+pnpm typecheck && pnpm lint && pnpm format-check && pnpm build && pnpm test
 ```
 
 ## Pre-commit
@@ -29,7 +29,7 @@ Husky runs lint-staged on staged `*.ts` files: `oxfmt --write` then `oxlint --fi
 
 1. Run `effect-solutions list` to see available guides
 2. Run `effect-solutions show <topic>...` for relevant patterns (supports multiple topics)
-3. Search `~/.local/share/effect-solutions/effect` for real implementations
+3. Search `repos/effect-smol` for real implementations
 
 Topics: quick-start, project-setup, tsconfig, basics, services-and-layers, data-modeling, error-handling, config, testing, cli.
 
@@ -37,7 +37,15 @@ Never guess at Effect patterns - check the guide first.
 
 <!-- effect-solutions:end -->
 
-## Local Effect Source
+## Vendored Repositories
 
-The Effect repository is cloned to `~/.local/share/effect-solutions/effect` for reference.
-Use this to explore APIs, find usage examples, and understand implementation details.
+This project vendors external repositories under `repos/`.
+
+- **effect-smol** — Effect v4 core libraries and experimental work.
+
+  - Use vendored repositories as **read-only reference material** when working with related libraries
+  - Prefer examples and patterns from the vendored source code over generated guesses or web search results
+  - Do **not** edit files under `repos/` unless explicitly asked
+  - Do **not** import from `repos/` — application code should continue importing from normal package dependencies
+  - When writing Effect code, inspect `repos/effect-smol/` for examples of idiomatic usage, tests, module structure, and API design. Treat it as the source of truth for Effect patterns.
+  - Always read `repos/effect-smol/LLMS.md` before writing any Effect code.

@@ -234,14 +234,14 @@ run_ci_checks() {
     echo "1. Type Checking..."
     echo "-------------------"
     local typecheck_output
-    if typecheck_output=$(npm run typecheck 2>&1); then
+    if typecheck_output=$(pnpm typecheck 2>&1); then
         echo -e "${GREEN}Type check passed${NC}"
     else
         echo -e "${RED}Type check failed${NC}"
         ci_failed=1
         error_output+="## Type Check Failed
 
-Command: \`npm run typecheck\`
+Command: \`pnpm typecheck\`
 
 \`\`\`
 $typecheck_output
@@ -255,14 +255,14 @@ $typecheck_output
     echo "2. Linting..."
     echo "-------------"
     local lint_output
-    if lint_output=$(npm run lint 2>&1); then
+    if lint_output=$(pnpm lint 2>&1); then
         echo -e "${GREEN}Lint passed${NC}"
     else
         echo -e "${RED}Lint failed${NC}"
         ci_failed=1
         error_output+="## Lint Failed
 
-Command: \`npm run lint\`
+Command: \`pnpm lint\`
 
 \`\`\`
 $lint_output
@@ -276,14 +276,14 @@ $lint_output
     echo "3. Building..."
     echo "--------------"
     local build_output
-    if build_output=$(npm run build 2>&1); then
+    if build_output=$(pnpm build 2>&1); then
         echo -e "${GREEN}Build passed${NC}"
     else
         echo -e "${RED}Build failed${NC}"
         ci_failed=1
         error_output+="## Build Failed
 
-Command: \`npm run build\`
+Command: \`pnpm build\`
 
 \`\`\`
 $build_output
@@ -297,14 +297,14 @@ $build_output
     echo "4. Running Tests..."
     echo "-------------------"
     local test_output
-    if test_output=$(npm test 2>&1); then
+    if test_output=$(pnpm test 2>&1); then
         echo -e "${GREEN}Tests passed${NC}"
     else
         echo -e "${RED}Tests failed${NC}"
         ci_failed=1
         error_output+="## Unit Tests Failed
 
-Command: \`npm test\`
+Command: \`pnpm test\`
 
 \`\`\`
 $test_output

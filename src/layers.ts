@@ -1,9 +1,8 @@
 import { Config, Effect, Layer } from "effect";
-import { S3 } from "@effect-aws/client-s3";
-import { DynamoDB } from "@effect-aws/client-dynamodb";
+import { S3Service } from "@effect-aws/client-s3";
+import { DynamoDBService } from "@effect-aws/client-dynamodb";
 import { MediaContentsRepositoryLive } from "./infrastructure/persistence/media-contents.repository.live.js";
 import { MediaMetadataRepositoryLive } from "./infrastructure/persistence/media-metadata.repository.live.js";
-import { PrettyLogger } from "effect-log";
 
 interface Config {
   region: string;
@@ -31,7 +30,7 @@ const loadConfig = (): Config =>
 
 const config = loadConfig();
 
-const S3ConfigLayer = S3.layer({
+const S3ConfigLayer = S3Service.layer({
   forcePathStyle: true,
   region: config.region,
   credentials: {
@@ -41,7 +40,7 @@ const S3ConfigLayer = S3.layer({
   ...(config.s3Endpoint && { endpoint: config.s3Endpoint })
 });
 
-const DynamoDBConfigLayer = DynamoDB.layer({
+const DynamoDBConfigLayer = DynamoDBService.layer({
   region: config.region,
   credentials: {
     accessKeyId: config.accessKeyId,
@@ -54,4 +53,4 @@ export const S3Layer = Layer.provide(MediaContentsRepositoryLive, S3ConfigLayer)
 
 export const DynamoDBLayer = Layer.provide(MediaMetadataRepositoryLive, DynamoDBConfigLayer);
 
-export default Layer.mergeAll(...([PrettyLogger.layer({}), S3Layer, DynamoDBLayer] as const));
+export default Layer.mergeAll(S3Layer, DynamoDBLayer);

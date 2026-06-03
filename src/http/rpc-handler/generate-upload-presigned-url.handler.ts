@@ -1,32 +1,34 @@
-import type { MediaFileExtension } from "../../domain/model/media.js";
 import { Effect } from "effect";
 import { MediaContentsRepository } from "../../domain/repository/media-contents.repository.js";
 import { randomUUID } from "crypto";
-import type { GenerateUploadPresignedUrlequest } from "../request/generate-upload-presigned-url.request.js";
 import { ERROR_CODE, GenerateUploadPresignedUrlError } from "../request/generate-upload-presigned-url.request.js";
 import { errorHandler } from "./helpers.js";
 
-const generateFileName = (fileExtension: MediaFileExtension) => {
+const generateFileName = (fileExtension: string) => {
   const today = new Date();
   return `${today.getFullYear()}/${today.getMonth() + 1}/${today.getDate()}/${randomUUID()}.${fileExtension}`;
 };
+
 const routeErrorHandler = errorHandler({
   failureResult: new GenerateUploadPresignedUrlError({
     errorCode: ERROR_CODE.SERVER_ERROR
   })
 });
 
-export const generateUploadPresignedUrlHandler = (request: GenerateUploadPresignedUrlequest) => {
-  return Effect.all([MediaContentsRepository, Effect.succeed(generateFileName(request.fileExtension))]).pipe(
-    Effect.flatMap(([repo, filePath]) =>
-      Effect.all([repo.generatePresignedUrlForUpload(request.mediaType, filePath), Effect.succeed(filePath)])
-    ),
-    Effect.map(([presignedUrl, filePath]) => ({
-      filePath,
-      presignedUrl
-    })),
+export const generateUploadPresignedUrlHandler = ({
+  mediaType,
+  fileExtension
+}: {
+  readonly mediaType: string;
+  readonly fileExtension: string;
+}) =>
+  Effect.gen(function* () {
+    const repo = yield* MediaContentsRepository;
+    const filePath = generateFileName(fileExtension);
+    const presignedUrl = yield* repo.generatePresignedUrlForUpload(mediaType, filePath);
+    return { filePath, presignedUrl };
+  }).pipe(
     Effect.catchTags({
       MediaContentsRepositoryError: routeErrorHandler
     })
   );
-};

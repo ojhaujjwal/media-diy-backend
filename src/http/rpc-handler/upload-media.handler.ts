@@ -1,5 +1,4 @@
 import { Effect } from "effect";
-import type { UploadMediaRequest } from "../request/upload-media.request.js";
 import { UPLOAD_MEDIA_ERROR_CODE, UploadMediaError } from "../request/upload-media.request.js";
 import { MediaMetadataRepository } from "../../domain/repository/media-metadata.repository.js";
 import { errorHandler } from "./helpers.js";
@@ -10,14 +9,29 @@ const routeErrorHandler = errorHandler({
   })
 });
 
-export const uploadMediaHandler = (request: UploadMediaRequest) =>
+export const uploadMediaHandler = ({
+  sha256Hash,
+  originalFileName,
+  type,
+  deviceId,
+  filePath,
+  capturedAt,
+  id
+}: {
+  readonly sha256Hash: string;
+  readonly originalFileName: string;
+  readonly type: "photo" | "video" | "live_photo";
+  readonly deviceId: string;
+  readonly filePath: string;
+  readonly capturedAt: Date;
+  readonly id: string;
+}) =>
   Effect.gen(function* () {
     const ownerUserId = "a208ada0-8862-4ede-b45d-8ec34742bbbd";
 
     const mediaMetadataRepository = yield* MediaMetadataRepository;
 
-    // findById is used as an existence check: if record exists, fail; if not found, continue to create
-    yield* mediaMetadataRepository.findById(ownerUserId, request.id).pipe(
+    yield* mediaMetadataRepository.findById(ownerUserId, id).pipe(
       Effect.flatMap(() =>
         Effect.fail(
           new UploadMediaError({
@@ -31,19 +45,19 @@ export const uploadMediaHandler = (request: UploadMediaRequest) =>
     );
 
     yield* mediaMetadataRepository.create({
-      originalFileName: request.originalFileName,
-      deviceId: request.deviceId,
-      filePath: request.filePath,
-      sha256Hash: request.sha256Hash,
-      type: request.type,
-      capturedAt: request.capturedAt,
+      originalFileName,
+      deviceId,
+      filePath,
+      sha256Hash,
+      type,
+      capturedAt,
       uploadedAt: new Date(),
-      id: request.id,
+      id,
       ownerUserId
     });
   }).pipe(
     Effect.catchTags({
       MediaMetadataRepositoryError: routeErrorHandler
     }),
-    Effect.catchAllDefect(routeErrorHandler)
+    Effect.catchDefect(routeErrorHandler)
   );

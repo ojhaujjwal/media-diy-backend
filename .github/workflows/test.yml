@@ -21,12 +21,13 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version-file: ".nvmrc"
-      - name: npm install
-        run: npm install
+      - uses: pnpm/action-setup@v4
+      - name: pnpm install
+        run: pnpm install
       - name: format
-        run: npm run format-check
+        run: pnpm format-check
       - name: lint
-        run: npm run lint
+        run: pnpm lint
       - name: Setup DynamoDB Local
         uses: rrainn/dynamodb-action@v4.0.0
         with:
@@ -41,7 +42,7 @@ jobs:
         run: bin/setup-s3-bucket
 
       - name: vitest
-        run: npm run test
+        run: pnpm test
 
   call-workflow-passing-data:
     if: github.ref == 'refs/heads/main'

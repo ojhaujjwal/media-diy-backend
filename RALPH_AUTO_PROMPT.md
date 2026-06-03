@@ -30,7 +30,7 @@ Use these files as reference when implementing tasks. Read relevant specs before
 
 1. **STAY ON TOPIC**: Work only on tasks related to the focus input. Do not work on unrelated areas.
 2. **DO NOT COMMIT**: The Ralph Auto script handles all git commits. Just write code.
-3. **CI MUST BE GREEN**: Your code MUST pass `npm run typecheck && npm run lint && npm run build && npm test` before signaling completion.
+3. **CI MUST BE GREEN**: Your code MUST pass `pnpm typecheck && pnpm lint && pnpm build && pnpm test` before signaling completion.
 4. **ONE TASK PER ITERATION**: Complete one task, signal completion, then STOP.
 5. **UPDATE SPECS**: Update spec files to mark tasks complete, add new tasks, or track progress.
 6. **FULL STACK**: Implement across all necessary layers - don't do frontend-only or backend-only when both need changes.
@@ -91,10 +91,10 @@ This ensures the task gets committed (via TASK_COMPLETE) AND the loop exits (via
 
 Before signaling TASK_COMPLETE:
 
-1. Run `npm run typecheck` - must pass with zero errors
-2. Run `npm run lint` - must pass with zero errors
-3. Run `npm run build` - must pass with zero errors
-4. Run `npm test` - must pass with zero failures
+1. Run `pnpm typecheck` - must pass with zero errors
+2. Run `pnpm lint` - must pass with zero errors
+3. Run `pnpm build` - must pass with zero errors
+4. Run `pnpm test` - must pass with zero failures
 
 **If any fail, fix the errors before signaling completion.**
 
@@ -104,7 +104,7 @@ Before signaling TASK_COMPLETE:
 2. **Read relevant specs** - understand the focus topic, context, and best practices
 3. **Select a task** - choose one task to work on within the focus topic
 4. **Implement** - follow patterns from specs, implement across all necessary layers
-5. **Verify CI** - run `npm run typecheck && npm run lint && npm run build && npm test`
+5. **Verify CI** - run `pnpm typecheck && pnpm lint && pnpm build && pnpm test`
 6. **Update spec** - mark the task complete, add new tasks if discovered
 7. **Signal** - output `TASK_COMPLETE: <description>` or `NOTHING_LEFT_TO_DO` if all done
 8. **STOP** - do not continue

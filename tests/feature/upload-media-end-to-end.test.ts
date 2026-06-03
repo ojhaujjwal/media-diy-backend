@@ -1,15 +1,14 @@
-import * as HttpClient from "@effect/platform/HttpClient";
-import * as HttpClientRequest from "@effect/platform/HttpClientRequest";
-import { FetchHttpClient } from "@effect/platform";
-import { RpcClient, RpcSerialization } from "@effect/rpc";
+import { FileSystem } from "effect/FileSystem";
+import { HttpClient, HttpClientRequest } from "effect/unstable/http";
+import { FetchHttpClient } from "effect/unstable/http";
+import { RpcClient, RpcSerialization } from "effect/unstable/rpc";
 import { appServerFactory } from "../../src/http/app-server-factory.js";
 import { UPLOAD_MEDIA_ERROR_CODE } from "../../src/http/request/upload-media.request.js";
 import { MediaType } from "../../src/domain/model/media.js";
-import { Effect, Either, Layer, pipe } from "effect";
+import { Effect, Layer, pipe, Result } from "effect";
 import * as NodeClient from "@effect/platform-node/NodeHttpClient";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import { describe, expect, it, beforeAll } from "@effect/vitest";
-import { FileSystem } from "@effect/platform";
 import { randomUUID } from "crypto";
 import { NodeRuntime } from "@effect/platform-node";
 import { MediaRpcs } from "../../src/http/rpc-handler/rpc-definitions.js";
@@ -23,7 +22,7 @@ const rpcClientLayer = pipe(
 
 describe("UploadMediaRequest", () => {
   beforeAll(() => {
-    NodeRuntime.runMain(appServerFactory(9020));
+    NodeRuntime.runMain(appServerFactory(9020).pipe(Layer.launch));
   });
 
   describe("GenerateUploadPresignedUrlRequest and then UploadMediaRequest", () => {
@@ -31,17 +30,17 @@ describe("UploadMediaRequest", () => {
       Effect.gen(function* () {
         const client = yield* RpcClient.make(MediaRpcs);
 
-        yield* client.GenerateUploadPresignedUrlequest({
+        yield* client.GenerateUploadPresignedUrlRequest({
           mediaType: MediaType.PHOTO,
           fileExtension: "jpeg"
         });
 
-        const { presignedUrl, filePath } = yield* client.GenerateUploadPresignedUrlequest({
+        const { presignedUrl, filePath } = yield* client.GenerateUploadPresignedUrlRequest({
           mediaType: MediaType.PHOTO,
           fileExtension: "jpeg"
         });
         const httpClient = yield* HttpClient.HttpClient;
-        const fs = yield* FileSystem.FileSystem;
+        const fs = yield* FileSystem;
         const { size: fileSizeInBytes } = yield* fs.stat("./tests/assets/koala.jpeg");
 
         const req = HttpClientRequest.put(presignedUrl).pipe(
@@ -81,13 +80,13 @@ describe("UploadMediaRequest", () => {
             capturedAt: new Date(),
             id
           })
-          .pipe(Effect.either);
+          .pipe(Effect.result);
 
-        if (!Either.isLeft(failureOrSuccess)) {
+        if (!Result.isFailure(failureOrSuccess)) {
           throw new Error("Expected uploading the same media should fail, but got success.");
         }
 
-        const error = failureOrSuccess.left;
+        const error = failureOrSuccess.failure;
         if (!("errorCode" in error)) {
           throw new Error(`Expected error with errorCode, got: ${error._tag}`);
         }
@@ -96,7 +95,7 @@ describe("UploadMediaRequest", () => {
       }).pipe(
         Effect.scoped,
         Effect.provide(rpcClientLayer),
-        Effect.provide(NodeClient.layer),
+        Effect.provide(NodeClient.layerFetch),
         Effect.provide(NodeFileSystem.layer),
         Effect.runPromise
       ));

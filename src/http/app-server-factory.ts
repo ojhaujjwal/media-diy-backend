@@ -1,8 +1,7 @@
 import { NodeHttpServer } from "@effect/platform-node";
-import { HttpRouter } from "@effect/platform";
-import * as RpcServer from "@effect/rpc/RpcServer";
-import * as RpcSerialization from "@effect/rpc/RpcSerialization";
-import { Layer, Logger, LogLevel } from "effect";
+import { HttpRouter } from "effect/unstable/http";
+import { RpcServer, RpcSerialization } from "effect/unstable/rpc";
+import { Layer, References } from "effect";
 import { createServer } from "http";
 import layers from "../layers.js";
 import { MediaRpcs } from "./rpc-handler/rpc-definitions.js";
@@ -14,14 +13,12 @@ const HttpProtocol = RpcServer.layerProtocolHttp({
   path: "/rpc"
 }).pipe(Layer.provide(RpcSerialization.layerJson));
 
-export type ClientRouter = typeof RpcLayer;
+const appLayer = RpcLayer.pipe(Layer.provideMerge(HttpProtocol), Layer.provideMerge(layers));
+
+const logLevelLayer = Layer.succeed(References.MinimumLogLevel, "Info");
 
 export const appServerFactory = (serverPort: number) =>
-  HttpRouter.Default.serve().pipe(
-    Layer.provide(RpcLayer),
-    Layer.provide(HttpProtocol),
-    Layer.provide(layers),
-    Layer.provide(NodeHttpServer.layer(createServer, { port: serverPort })),
-    Layer.provide(Logger.minimumLogLevel(LogLevel.Info)),
-    Layer.launch
+  HttpRouter.serve(appLayer).pipe(
+    Layer.provide(NodeHttpServer.layerServer(createServer, { port: serverPort })),
+    Layer.provideMerge(logLevelLayer)
   );

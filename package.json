@@ -15,24 +15,22 @@
     "lint:fix": "NODE_OPTIONS='--import tsx/esm' oxlint --disable-nested-config --fix",
     "format": "oxfmt --write",
     "format-check": "oxfmt --check",
-    "ci": "npm run typecheck && npm run lint && npm test -- --run && npm run format-check",
+    "ci": "pnpm typecheck && pnpm lint && pnpm test -- --run && pnpm format-check",
     "lint-staged": "lint-staged",
     "prepare": "husky && effect-language-service patch"
   },
   "dependencies": {
-    "@effect-aws/client-dynamodb": "^1.11.0",
-    "@effect-aws/client-s3": "^1.11.0",
-    "@effect/platform": "^0.96.0",
-    "@effect/platform-node": "^0.106.0",
-    "@effect/rpc": "^0.75.0",
-    "effect": "^3.21.0",
-    "effect-log": "^0.36.0",
+    "@aws-sdk/client-dynamodb": "^3.1060.0",
+    "@effect-aws/client-dynamodb": "^2.0.0-beta.4",
+    "@effect-aws/client-s3": "^2.0.0-beta.4",
+    "@effect/platform-node": "^4.0.0-beta.76",
+    "effect": "^4.0.0-beta.76",
     "fast-check": "^3.18.0",
     "minio": "^8.0.0"
   },
   "devDependencies": {
-    "@effect/language-service": "^0.84.2",
-    "@effect/vitest": "^0.29.0",
+    "@effect/language-service": "^0.86.2",
+    "@effect/vitest": "^4.0.0-beta.76",
     "@oxlint/plugins": "^1.68.0",
     "@types/node": "^22.0.0",
     "dotenv": "^16.4.5",
@@ -50,6 +48,13 @@
     "*.ts": [
       "oxfmt --write",
       "oxlint --fix"
+    ]
+  },
+  "packageManager": "pnpm@10.14.0",
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "msgpackr-extract"
     ]
   }
 }

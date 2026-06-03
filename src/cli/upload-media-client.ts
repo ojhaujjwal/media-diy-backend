@@ -1,7 +1,6 @@
 import { Effect, Chunk, Console, Layer, pipe } from "effect";
-import * as RpcClient from "@effect/rpc/RpcClient";
-import * as RpcSerialization from "@effect/rpc/RpcSerialization";
-import * as FetchHttpClient from "@effect/platform/FetchHttpClient";
+import { RpcClient, RpcSerialization } from "effect/unstable/rpc";
+import { FetchHttpClient } from "effect/unstable/http";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodeClient from "@effect/platform-node/NodeHttpClient";
 import { MediaRpcs } from "../http/rpc-handler/rpc-definitions.js";
@@ -142,14 +141,14 @@ const program = (options: CliOptions) =>
 
       const sha256Hash = yield* computeSha256(filePath);
 
-      const findResult = yield* client.FindMediaByHashRequest({ sha256Hash }).pipe(Effect.either);
+      const findResult = yield* client.FindMediaByHashRequest({ sha256Hash }).pipe(Effect.result);
 
-      if (findResult._tag === "Right") {
+      if (findResult._tag === "Success") {
         yield* Console.log(`Skipped (already uploaded): ${filename}`);
         continue;
       }
 
-      const error = findResult.left;
+      const error = findResult.failure;
       if (error._tag !== "FindMediaByHashError" || error.errorCode !== ERROR_CODE.NOT_FOUND) {
         yield* Console.error(`Error checking hash for ${filename}: ${JSON.stringify(error)}`);
         continue;
@@ -175,10 +174,10 @@ const program = (options: CliOptions) =>
           filePath,
           capturedAt: stats.mtime
         })
-        .pipe(Effect.either);
+        .pipe(Effect.result);
 
-      if (uploadResult._tag === "Left") {
-        yield* Console.error(`Error uploading ${filename}: ${JSON.stringify(uploadResult.left)}`);
+      if (uploadResult._tag === "Failure") {
+        yield* Console.error(`Error uploading ${filename}: ${JSON.stringify(uploadResult.failure)}`);
       } else {
         yield* Console.log(`Uploaded: ${filename} (id: ${id})`);
       }
@@ -192,7 +191,7 @@ const rpcClientLayer = pipe(
   Layer.provide([FetchHttpClient.layer, RpcSerialization.layerJson])
 );
 
-const allLayers = Layer.mergeAll(NodeClient.layer, NodeFileSystem.layer);
+const allLayers = Layer.mergeAll(NodeClient.layerFetch, NodeFileSystem.layer);
 
 const cli = program({
   directory,
