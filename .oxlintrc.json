@@ -7,6 +7,7 @@
     "**/.next/**",
     "**/.turbo/**",
     "**/coverage/**",
+    "**/repos/**",
     "**/*.gen.ts",
     "**/*.gen.tsx",
     "**/*.md"
