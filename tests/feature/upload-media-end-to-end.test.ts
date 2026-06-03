@@ -95,7 +95,7 @@ describe("UploadMediaRequest", () => {
       }).pipe(
         Effect.scoped,
         Effect.provide(rpcClientLayer),
-        Effect.provide(NodeClient.layerFetch),
+        Effect.provide(NodeClient.layerUndici),
         Effect.provide(NodeFileSystem.layer),
         Effect.runPromise
       ));
