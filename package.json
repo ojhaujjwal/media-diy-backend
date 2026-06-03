@@ -19,9 +19,6 @@
     "lint-staged": "lint-staged",
     "prepare": "husky && effect-language-service patch"
   },
-  "lint-staged": {
-    "*.ts": ["oxfmt --write", "oxlint --fix"]
-  },
   "dependencies": {
     "@effect-aws/client-dynamodb": "^1.11.0",
     "@effect-aws/client-s3": "^1.11.0",
@@ -48,5 +45,11 @@
     "tsx": "^4.7.1",
     "typescript": "^5.8.3",
     "vitest": "^3.2.0"
+  },
+  "lint-staged": {
+    "*.ts": [
+      "oxfmt --write",
+      "oxlint --fix"
+    ]
   }
 }
