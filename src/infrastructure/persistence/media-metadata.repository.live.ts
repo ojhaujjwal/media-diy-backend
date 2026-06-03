@@ -1,21 +1,16 @@
 import { Config, Effect, Layer } from "effect";
 import {
   MediaMetadataRepository,
-  MediaMetadataRepositoryError,
-} from "../../domain/repository/media-metadata.repository";
-import { MediaMetadata, MediaType } from "../../domain/model/media";
+  MediaMetadataRepositoryError
+} from "../../domain/repository/media-metadata.repository.js";
+import { MediaMetadata, MediaType } from "../../domain/model/media.js";
 import { DynamoDBService } from "@effect-aws/client-dynamodb";
 import type { AttributeValue } from "@aws-sdk/client-dynamodb";
 
 const tableName = Effect.runSync(Config.string("AWS_DYNAMODB_TABLE"));
 
 const getDynamoString = (attr: AttributeValue): Effect.Effect<string> => {
-  if (
-    attr &&
-    typeof attr === "object" &&
-    "S" in attr &&
-    typeof attr.S === "string"
-  ) {
+  if (attr && typeof attr === "object" && "S" in attr && typeof attr.S === "string") {
     return Effect.succeed(attr.S);
   }
   return Effect.die("Expected DynamoDB string attribute");
@@ -34,11 +29,7 @@ const parseMediaType = (value: string): Effect.Effect<MediaType> => {
   return Effect.die(`Invalid MediaType: ${value}`);
 };
 
-export const MediaMetadataRepositoryLive: Layer.Layer<
-  MediaMetadataRepository,
-  never,
-  DynamoDBService
-> = Layer.effect(
+export const MediaMetadataRepositoryLive: Layer.Layer<MediaMetadataRepository, never, DynamoDBService> = Layer.effect(
   MediaMetadataRepository,
   Effect.gen(function* () {
     const dynamoDBService = yield* DynamoDBService;
@@ -59,8 +50,8 @@ export const MediaMetadataRepositoryLive: Layer.Layer<
               sha256Hash: { S: mediaMetadata.sha256Hash },
               type: { S: mediaMetadata.type },
               capturedAt: { S: mediaMetadata.capturedAt.toISOString() },
-              uploadedAt: { S: mediaMetadata.uploadedAt.toISOString() },
-            },
+              uploadedAt: { S: mediaMetadata.uploadedAt.toISOString() }
+            }
           })
           .pipe(
             Effect.flatMap(() => Effect.void),
@@ -69,9 +60,9 @@ export const MediaMetadataRepositoryLive: Layer.Layer<
                 new MediaMetadataRepositoryError({
                   message: "Something went wrong",
                   reason: "UnknownError",
-                  previous: e,
-                }),
-            ),
+                  previous: e
+                })
+            )
           ),
 
       findById: (ownerUserId, mediaId) =>
@@ -80,22 +71,20 @@ export const MediaMetadataRepositoryLive: Layer.Layer<
             TableName: tableName,
             Key: {
               HashKey: { S: `User-${ownerUserId}` },
-              RangeKey: { S: `MediaMetadata-${mediaId}` },
-            },
+              RangeKey: { S: `MediaMetadata-${mediaId}` }
+            }
           });
 
           if (!item.Item) {
             return yield* new MediaMetadataRepositoryError({
               message: "Record not found",
-              reason: "RecordNotFound",
+              reason: "RecordNotFound"
             });
           }
 
           const itemData = item.Item;
 
-          const originalFileName = yield* getDynamoString(
-            itemData.originalFileName,
-          );
+          const originalFileName = yield* getDynamoString(itemData.originalFileName);
           const capturedAt = yield* getDynamoString(itemData.capturedAt);
           const deviceId = yield* getDynamoString(itemData.deviceId);
           const filePath = yield* getDynamoString(itemData.filePath);
@@ -114,7 +103,7 @@ export const MediaMetadataRepositoryLive: Layer.Layer<
             sha256Hash,
             ownerUserId,
             type: parsedType,
-            uploadedAt: new Date(uploadedAt),
+            uploadedAt: new Date(uploadedAt)
           });
         }).pipe(
           Effect.mapError((e) =>
@@ -123,9 +112,9 @@ export const MediaMetadataRepositoryLive: Layer.Layer<
               : new MediaMetadataRepositoryError({
                   message: "Something went wrong",
                   reason: "UnknownError",
-                  previous: e,
-                }),
-          ),
+                  previous: e
+                })
+          )
         ),
 
       findByHash: (sha256Hash) =>
@@ -135,14 +124,14 @@ export const MediaMetadataRepositoryLive: Layer.Layer<
             IndexName: "Sha256HashIndex",
             KeyConditionExpression: "GSI1PK = :gsi1pk",
             ExpressionAttributeValues: {
-              ":gsi1pk": { S: `Hash-${sha256Hash}` },
-            },
+              ":gsi1pk": { S: `Hash-${sha256Hash}` }
+            }
           });
 
           if (!item.Items || item.Items.length === 0) {
             return yield* new MediaMetadataRepositoryError({
               message: "Record not found",
-              reason: "RecordNotFound",
+              reason: "RecordNotFound"
             });
           }
 
@@ -153,9 +142,7 @@ export const MediaMetadataRepositoryLive: Layer.Layer<
           const ownerUserId = hashKey.replace("User-", "");
           const mediaId = rangeKey.replace("MediaMetadata-", "");
 
-          const originalFileName = yield* getDynamoString(
-            itemData.originalFileName,
-          );
+          const originalFileName = yield* getDynamoString(itemData.originalFileName);
           const capturedAt = yield* getDynamoString(itemData.capturedAt);
           const deviceId = yield* getDynamoString(itemData.deviceId);
           const filePath = yield* getDynamoString(itemData.filePath);
@@ -173,7 +160,7 @@ export const MediaMetadataRepositoryLive: Layer.Layer<
             sha256Hash,
             ownerUserId,
             type: parsedType,
-            uploadedAt: new Date(uploadedAt),
+            uploadedAt: new Date(uploadedAt)
           });
         }).pipe(
           Effect.mapError((e) =>
@@ -182,10 +169,10 @@ export const MediaMetadataRepositoryLive: Layer.Layer<
               : new MediaMetadataRepositoryError({
                   message: "Something went wrong",
                   reason: "UnknownError",
-                  previous: e,
-                }),
-          ),
-        ),
+                  previous: e
+                })
+          )
+        )
     });
-  }),
+  })
 );

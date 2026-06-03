@@ -5,6 +5,4 @@ export const errorHandler: <E1, E2>(parameters: {
 }) => (receivedError: E2) => Effect.Effect<never, E1> =
   ({ failureResult }) =>
   (receivedError) =>
-    Effect.logError(receivedError).pipe(
-      Effect.flatMap(() => Effect.fail(failureResult)),
-    );
+    Effect.logError(receivedError).pipe(Effect.flatMap(() => Effect.fail(failureResult)));

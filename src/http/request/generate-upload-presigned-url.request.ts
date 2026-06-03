@@ -1,21 +1,19 @@
 import { Schema as S } from "effect";
-import { MediaFileExtensionSchema, MediaType } from "../../domain/model/media";
+import { MediaFileExtensionSchema, MediaType } from "../../domain/model/media.js";
 
 export enum ERROR_CODE {
-  SERVER_ERROR = "server_error",
+  SERVER_ERROR = "server_error"
 }
 
 export class GenerateUploadPresignedUrlError extends S.Class<GenerateUploadPresignedUrlError>(
-  "GenerateUploadPresignedUrlError",
+  "GenerateUploadPresignedUrlError"
 )({
-  errorCode: S.Enums(ERROR_CODE),
+  errorCode: S.Enums(ERROR_CODE)
 }) {}
 
-export class PresignedUrlResponse extends S.Class<PresignedUrlResponse>(
-  "PresignedUrlResponse",
-)({
+export class PresignedUrlResponse extends S.Class<PresignedUrlResponse>("PresignedUrlResponse")({
   presignedUrl: S.String,
-  filePath: S.String,
+  filePath: S.String
 }) {}
 
 export class GenerateUploadPresignedUrlequest extends S.TaggedRequest<GenerateUploadPresignedUrlequest>()(
@@ -25,7 +23,7 @@ export class GenerateUploadPresignedUrlequest extends S.TaggedRequest<GenerateUp
     success: PresignedUrlResponse,
     payload: {
       mediaType: S.Enums(MediaType),
-      fileExtension: MediaFileExtensionSchema,
-    },
-  },
+      fileExtension: MediaFileExtensionSchema
+    }
+  }
 ) {}

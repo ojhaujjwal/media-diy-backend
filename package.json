@@ -2,36 +2,25 @@
   "name": "ts-starter",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
-  "type": "commonjs",
+  "license": "ISC",
+  "author": "",
+  "type": "module",
   "scripts": {
     "test": "vitest run",
     "build": "tsc",
     "typecheck": "tsc --noEmit",
-    "dev": "nodemon --exec 'tsx -r dotenv/config' --watch src/ src/http/run-server.ts",
+    "dev": "nodemon --exec 'tsx --env-file=.env' --watch src/ src/http/run-server.ts",
     "upload": "tsx src/cli/upload-media-client.ts",
-    "format": "prettier ./src ./tests --write",
-    "lint": "eslint ./src ./tests",
-    "prepare": "effect-language-service patch"
+    "lint": "NODE_OPTIONS='--import tsx/esm' oxlint --disable-nested-config",
+    "lint:fix": "NODE_OPTIONS='--import tsx/esm' oxlint --disable-nested-config --fix",
+    "format": "oxfmt --write",
+    "format-check": "oxfmt --check",
+    "ci": "npm run typecheck && npm run lint && npm test -- --run && npm run format-check",
+    "lint-staged": "lint-staged",
+    "prepare": "husky && effect-language-service patch"
   },
-  "author": "",
-  "license": "ISC",
-  "devDependencies": {
-    "@effect/language-service": "^0.84.2",
-    "@effect/vitest": "^0.29.0",
-    "@eslint/js": "^9.39.2",
-    "@types/node": "^22.0.0",
-    "@typescript-eslint/eslint-plugin": "^8.52.0",
-    "@typescript-eslint/parser": "^8.52.0",
-    "dotenv": "^16.4.5",
-    "eslint": "^9.39.2",
-    "eslint-config-prettier": "^10.1.8",
-    "nodemon": "^3.1.0",
-    "prettier": "^3.2.5",
-    "ts-node": "^10.9.2",
-    "tsx": "^4.7.1",
-    "typescript": "^5.8.3",
-    "vitest": "^3.2.0"
+  "lint-staged": {
+    "*.ts": ["oxfmt --write", "oxlint --fix"]
   },
   "dependencies": {
     "@effect-aws/client-dynamodb": "^1.11.0",
@@ -43,5 +32,21 @@
     "effect-log": "^0.36.0",
     "fast-check": "^3.18.0",
     "minio": "^8.0.0"
+  },
+  "devDependencies": {
+    "@effect/language-service": "^0.84.2",
+    "@effect/vitest": "^0.29.0",
+    "@oxlint/plugins": "^1.68.0",
+    "@types/node": "^22.0.0",
+    "dotenv": "^16.4.5",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.0.7",
+    "nodemon": "^3.1.0",
+    "oxfmt": "^0.53.0",
+    "oxlint": "^1.68.0",
+    "ts-node": "^10.9.2",
+    "tsx": "^4.7.1",
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.0"
   }
 }

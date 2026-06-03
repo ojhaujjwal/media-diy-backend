@@ -1,13 +1,10 @@
-import type { MediaFileExtension } from "../../domain/model/media";
+import type { MediaFileExtension } from "../../domain/model/media.js";
 import { Effect } from "effect";
-import { MediaContentsRepository } from "../../domain/repository/media-contents.repository";
+import { MediaContentsRepository } from "../../domain/repository/media-contents.repository.js";
 import { randomUUID } from "crypto";
-import type { GenerateUploadPresignedUrlequest } from "../request/generate-upload-presigned-url.request";
-import {
-  ERROR_CODE,
-  GenerateUploadPresignedUrlError,
-} from "../request/generate-upload-presigned-url.request";
-import { errorHandler } from "./helpers";
+import type { GenerateUploadPresignedUrlequest } from "../request/generate-upload-presigned-url.request.js";
+import { ERROR_CODE, GenerateUploadPresignedUrlError } from "../request/generate-upload-presigned-url.request.js";
+import { errorHandler } from "./helpers.js";
 
 const generateFileName = (fileExtension: MediaFileExtension) => {
   const today = new Date();
@@ -15,29 +12,21 @@ const generateFileName = (fileExtension: MediaFileExtension) => {
 };
 const routeErrorHandler = errorHandler({
   failureResult: new GenerateUploadPresignedUrlError({
-    errorCode: ERROR_CODE.SERVER_ERROR,
-  }),
+    errorCode: ERROR_CODE.SERVER_ERROR
+  })
 });
 
-export const generateUploadPresignedUrlHandler = (
-  request: GenerateUploadPresignedUrlequest,
-) => {
-  return Effect.all([
-    MediaContentsRepository,
-    Effect.succeed(generateFileName(request.fileExtension)),
-  ]).pipe(
+export const generateUploadPresignedUrlHandler = (request: GenerateUploadPresignedUrlequest) => {
+  return Effect.all([MediaContentsRepository, Effect.succeed(generateFileName(request.fileExtension))]).pipe(
     Effect.flatMap(([repo, filePath]) =>
-      Effect.all([
-        repo.generatePresignedUrlForUpload(request.mediaType, filePath),
-        Effect.succeed(filePath),
-      ]),
+      Effect.all([repo.generatePresignedUrlForUpload(request.mediaType, filePath), Effect.succeed(filePath)])
     ),
     Effect.map(([presignedUrl, filePath]) => ({
       filePath,
-      presignedUrl,
+      presignedUrl
     })),
     Effect.catchTags({
-      MediaContentsRepositoryError: routeErrorHandler,
-    }),
+      MediaContentsRepositoryError: routeErrorHandler
+    })
   );
 };

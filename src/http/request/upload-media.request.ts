@@ -1,32 +1,26 @@
 import { Schema as S } from "effect";
-import { MediaType } from "../../domain/model/media";
+import { MediaType } from "../../domain/model/media.js";
 
 export enum UPLOAD_MEDIA_ERROR_CODE {
   SERVER_ERROR = "server_error",
   MEDIA_NOT_FOUND = "media_not_found",
-  MEDIA_ALREADY_EXISTS = "media_already_exists",
+  MEDIA_ALREADY_EXISTS = "media_already_exists"
 }
 
-export class UploadMediaError extends S.TaggedError<UploadMediaError>()(
-  "UploadMediaError",
-  {
-    errorCode: S.Enums(UPLOAD_MEDIA_ERROR_CODE),
-  },
-) {}
+export class UploadMediaError extends S.TaggedError<UploadMediaError>()("UploadMediaError", {
+  errorCode: S.Enums(UPLOAD_MEDIA_ERROR_CODE)
+}) {}
 
-export class UploadMediaRequest extends S.TaggedRequest<UploadMediaRequest>()(
-  "UploadMediaRequest",
-  {
-    failure: UploadMediaError,
-    success: S.Void,
-    payload: {
-      sha256Hash: S.String,
-      originalFileName: S.String,
-      type: S.Enums(MediaType),
-      deviceId: S.String,
-      filePath: S.String,
-      capturedAt: S.Date,
-      id: S.UUID,
-    },
-  },
-) {}
+export class UploadMediaRequest extends S.TaggedRequest<UploadMediaRequest>()("UploadMediaRequest", {
+  failure: UploadMediaError,
+  success: S.Void,
+  payload: {
+    sha256Hash: S.String,
+    originalFileName: S.String,
+    type: S.Enums(MediaType),
+    deviceId: S.String,
+    filePath: S.String,
+    capturedAt: S.Date,
+    id: S.UUID
+  }
+}) {}

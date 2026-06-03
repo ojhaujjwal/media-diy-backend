@@ -4,15 +4,15 @@ import * as RpcSerialization from "@effect/rpc/RpcSerialization";
 import * as FetchHttpClient from "@effect/platform/FetchHttpClient";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodeClient from "@effect/platform-node/NodeHttpClient";
-import { MediaRpcs } from "../http/rpc-handler/rpc-definitions";
-import { MediaType, FILE_EXTENSION_MAPPING } from "../domain/model/media";
-import { ERROR_CODE } from "../http/request/find-media-by-hash.request";
+import { MediaRpcs } from "../http/rpc-handler/rpc-definitions.js";
+import { MediaType, FILE_EXTENSION_MAPPING } from "../domain/model/media.js";
+import { ERROR_CODE } from "../http/request/find-media-by-hash.request.js";
 import * as fs from "fs/promises";
 import * as path from "path";
 import * as crypto from "crypto";
 
 const parseArgs = (
-  args: string[],
+  args: string[]
 ): {
   directory: string;
   deviceId: string;
@@ -22,7 +22,7 @@ const parseArgs = (
   const directory = args[2];
   if (!directory) {
     console.error(
-      "Usage: tsx src/cli/upload-media-client.ts <directory> [--device-id <id>] [--server-url <url>] [--dry-run]",
+      "Usage: tsx src/cli/upload-media-client.ts <directory> [--device-id <id>] [--server-url <url>] [--dry-run]"
     );
     process.exit(1);
   }
@@ -47,9 +47,7 @@ const parseArgs = (
 
 const { directory, deviceId, serverUrl, dryRun } = parseArgs(process.argv);
 
-const flattenExtensions = (
-  mapping: Record<MediaType, readonly string[]>,
-): Set<string> => {
+const flattenExtensions = (mapping: Record<MediaType, readonly string[]>): Set<string> => {
   const extensions = new Set<string>();
   for (const exts of Object.values(mapping)) {
     for (const ext of exts) {
@@ -72,16 +70,10 @@ const isValidMediaFile = (filename: string): boolean => {
 };
 
 const computeSha256 = (filePath: string): Effect.Effect<string> =>
-  Effect.promise(() =>
-    fs
-      .readFile(filePath)
-      .then((data) => crypto.createHash("sha256").update(data).digest("hex")),
-  );
+  Effect.promise(() => fs.readFile(filePath).then((data) => crypto.createHash("sha256").update(data).digest("hex")));
 
 const getFileStats = (filePath: string): Effect.Effect<{ mtime: Date }> =>
-  Effect.promise(() =>
-    fs.stat(filePath).then((stats) => ({ mtime: stats.mtime })),
-  );
+  Effect.promise(() => fs.stat(filePath).then((stats) => ({ mtime: stats.mtime })));
 
 const scanDirectory = (dirPath: string): Effect.Effect<Chunk.Chunk<string>> =>
   Effect.promise(() =>
@@ -93,7 +85,7 @@ const scanDirectory = (dirPath: string): Effect.Effect<Chunk.Chunk<string>> =>
         }
       }
       return Chunk.fromIterable(files);
-    }),
+    })
   );
 
 interface CliOptions {
@@ -150,9 +142,7 @@ const program = (options: CliOptions) =>
 
       const sha256Hash = yield* computeSha256(filePath);
 
-      const findResult = yield* client
-        .FindMediaByHashRequest({ sha256Hash })
-        .pipe(Effect.either);
+      const findResult = yield* client.FindMediaByHashRequest({ sha256Hash }).pipe(Effect.either);
 
       if (findResult._tag === "Right") {
         yield* Console.log(`Skipped (already uploaded): ${filename}`);
@@ -160,20 +150,13 @@ const program = (options: CliOptions) =>
       }
 
       const error = findResult.left;
-      if (
-        error._tag !== "FindMediaByHashError" ||
-        error.errorCode !== ERROR_CODE.NOT_FOUND
-      ) {
-        yield* Console.error(
-          `Error checking hash for ${filename}: ${JSON.stringify(error)}`,
-        );
+      if (error._tag !== "FindMediaByHashError" || error.errorCode !== ERROR_CODE.NOT_FOUND) {
+        yield* Console.error(`Error checking hash for ${filename}: ${JSON.stringify(error)}`);
         continue;
       }
 
       if (options.dryRun) {
-        yield* Console.log(
-          `[DRY RUN] Would upload: ${filename} (hash: ${sha256Hash})`,
-        );
+        yield* Console.log(`[DRY RUN] Would upload: ${filename} (hash: ${sha256Hash})`);
         continue;
       }
 
@@ -190,14 +173,12 @@ const program = (options: CliOptions) =>
           type: mediaType,
           deviceId: options.deviceId,
           filePath,
-          capturedAt: stats.mtime,
+          capturedAt: stats.mtime
         })
         .pipe(Effect.either);
 
       if (uploadResult._tag === "Left") {
-        yield* Console.error(
-          `Error uploading ${filename}: ${JSON.stringify(uploadResult.left)}`,
-        );
+        yield* Console.error(`Error uploading ${filename}: ${JSON.stringify(uploadResult.left)}`);
       } else {
         yield* Console.log(`Uploaded: ${filename} (id: ${id})`);
       }
@@ -206,9 +187,9 @@ const program = (options: CliOptions) =>
 
 const rpcClientLayer = pipe(
   RpcClient.layerProtocolHttp({
-    url: serverUrl,
+    url: serverUrl
   }),
-  Layer.provide([FetchHttpClient.layer, RpcSerialization.layerJson]),
+  Layer.provide([FetchHttpClient.layer, RpcSerialization.layerJson])
 );
 
 const allLayers = Layer.mergeAll(NodeClient.layer, NodeFileSystem.layer);
@@ -217,12 +198,7 @@ const cli = program({
   directory,
   deviceId,
   serverUrl,
-  dryRun,
+  dryRun
 });
 
-Effect.runPromise(
-  cli.pipe(
-    Effect.scoped,
-    Effect.provide(Layer.mergeAll(rpcClientLayer, allLayers)),
-  ),
-);
+Effect.runPromise(cli.pipe(Effect.scoped, Effect.provide(Layer.mergeAll(rpcClientLayer, allLayers))));

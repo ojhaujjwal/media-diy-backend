@@ -2,16 +2,12 @@ import { Config, Effect, Layer } from "effect";
 import { S3Service } from "@effect-aws/client-s3";
 import {
   MediaContentsRepository,
-  MediaContentsRepositoryError,
-} from "../../domain/repository/media-contents.repository";
+  MediaContentsRepositoryError
+} from "../../domain/repository/media-contents.repository.js";
 
 const bucketName = Effect.runSync(Config.string("AWS_BUCKET_NAME"));
 
-export const MediaContentsRepositoryLive: Layer.Layer<
-  MediaContentsRepository,
-  never,
-  S3Service
-> = Layer.effect(
+export const MediaContentsRepositoryLive: Layer.Layer<MediaContentsRepository, never, S3Service> = Layer.effect(
   MediaContentsRepository,
   Effect.gen(function* () {
     const s3Service = yield* S3Service;
@@ -21,7 +17,7 @@ export const MediaContentsRepositoryLive: Layer.Layer<
         Effect.gen(function* () {
           yield* s3Service.headObject({
             Bucket: bucketName,
-            Key: fromPath,
+            Key: fromPath
           });
           return true;
         }).pipe(
@@ -32,9 +28,9 @@ export const MediaContentsRepositoryLive: Layer.Layer<
               new MediaContentsRepositoryError({
                 message: "Something went wrong",
                 reason: "UnknownError",
-                previous: e,
-              }),
-          ),
+                previous: e
+              })
+          )
         ),
 
       generatePresignedUrlForUpload: (contentType, filePath) =>
@@ -43,9 +39,9 @@ export const MediaContentsRepositoryLive: Layer.Layer<
             {
               Bucket: bucketName,
               Key: filePath,
-              ContentType: contentType,
+              ContentType: contentType
             },
-            { presigned: true },
+            { presigned: true }
           )
           .pipe(
             Effect.mapError(
@@ -53,10 +49,10 @@ export const MediaContentsRepositoryLive: Layer.Layer<
                 new MediaContentsRepositoryError({
                   message: "Something went wrong",
                   reason: "UnknownError",
-                  previous: e,
-                }),
-            ),
-          ),
+                  previous: e
+                })
+            )
+          )
     });
-  }),
+  })
 );

@@ -2,6 +2,8 @@
 
 - Build: `npm run build`
 - Dev: `npm run dev`
+- Format: `npm run format`
+- Format check: `npm run format-check`
 
 ## Validation
 
@@ -12,8 +14,12 @@
 ## CI Check (run before commit)
 
 ```
-npm run typecheck && npm run lint && npm run build && npm test
+npm run typecheck && npm run lint && npm run format-check && npm run build && npm test
 ```
+
+## Pre-commit
+
+Husky runs lint-staged on staged `*.ts` files: `oxfmt --write` then `oxlint --fix`.
 
 <!-- effect-solutions:start -->
 

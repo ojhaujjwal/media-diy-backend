@@ -3,27 +3,16 @@ import { Schema as S } from "effect";
 export enum MediaType {
   PHOTO = "photo",
   VIDEO = "video",
-  LIVE_PHOTO = "live_photo",
+  LIVE_PHOTO = "live_photo"
 }
 
-export const MediaFileExtensionSchema = S.Literal(
-  "heic",
-  "heif",
-  "jpg",
-  "jpeg",
-  "png",
-  "mp4",
-  "mov",
-);
+export const MediaFileExtensionSchema = S.Literal("heic", "heif", "jpg", "jpeg", "png", "mp4", "mov");
 export type MediaFileExtension = S.Schema.Type<typeof MediaFileExtensionSchema>;
 
-export const FILE_EXTENSION_MAPPING: Record<
-  MediaType,
-  readonly MediaFileExtension[]
-> = {
+export const FILE_EXTENSION_MAPPING: Record<MediaType, readonly MediaFileExtension[]> = {
   [MediaType.PHOTO]: ["heic", "heif", "jpg", "jpeg", "png"],
   [MediaType.LIVE_PHOTO]: ["heic", "heif"],
-  [MediaType.VIDEO]: ["mp4", "mov", "heif"],
+  [MediaType.VIDEO]: ["mp4", "mov", "heif"]
 } as const;
 
 export const ExifMetadata = S.Struct({
@@ -47,8 +36,8 @@ export const ExifMetadata = S.Struct({
     latitude: S.Number,
     longitude: S.Number,
     altitude: S.Number,
-    timestamp: S.Date,
-  }),
+    timestamp: S.Date
+  })
 });
 
 export class MediaMetadata extends S.Class<MediaMetadata>("MediaMetadata")({
@@ -61,5 +50,5 @@ export class MediaMetadata extends S.Class<MediaMetadata>("MediaMetadata")({
   ownerUserId: S.String,
   uploadedAt: S.Date,
   capturedAt: S.Date,
-  exif: S.optional(ExifMetadata),
+  exif: S.optional(ExifMetadata)
 }) {}

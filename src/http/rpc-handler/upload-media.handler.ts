@@ -1,16 +1,13 @@
 import { Effect } from "effect";
-import type { UploadMediaRequest } from "../request/upload-media.request";
-import {
-  UPLOAD_MEDIA_ERROR_CODE,
-  UploadMediaError,
-} from "../request/upload-media.request";
-import { MediaMetadataRepository } from "../../domain/repository/media-metadata.repository";
-import { errorHandler } from "./helpers";
+import type { UploadMediaRequest } from "../request/upload-media.request.js";
+import { UPLOAD_MEDIA_ERROR_CODE, UploadMediaError } from "../request/upload-media.request.js";
+import { MediaMetadataRepository } from "../../domain/repository/media-metadata.repository.js";
+import { errorHandler } from "./helpers.js";
 
 const routeErrorHandler = errorHandler({
   failureResult: new UploadMediaError({
-    errorCode: UPLOAD_MEDIA_ERROR_CODE.SERVER_ERROR,
-  }),
+    errorCode: UPLOAD_MEDIA_ERROR_CODE.SERVER_ERROR
+  })
 });
 
 export const uploadMediaHandler = (request: UploadMediaRequest) =>
@@ -24,13 +21,13 @@ export const uploadMediaHandler = (request: UploadMediaRequest) =>
       Effect.flatMap(() =>
         Effect.fail(
           new UploadMediaError({
-            errorCode: UPLOAD_MEDIA_ERROR_CODE.MEDIA_ALREADY_EXISTS,
-          }),
-        ),
+            errorCode: UPLOAD_MEDIA_ERROR_CODE.MEDIA_ALREADY_EXISTS
+          })
+        )
       ),
       Effect.catchTag("MediaMetadataRepositoryError", (e) =>
-        e.reason === "RecordNotFound" ? Effect.void : Effect.fail(e),
-      ),
+        e.reason === "RecordNotFound" ? Effect.void : Effect.fail(e)
+      )
     );
 
     yield* mediaMetadataRepository.create({
@@ -42,11 +39,11 @@ export const uploadMediaHandler = (request: UploadMediaRequest) =>
       capturedAt: request.capturedAt,
       uploadedAt: new Date(),
       id: request.id,
-      ownerUserId,
+      ownerUserId
     });
   }).pipe(
     Effect.catchTags({
-      MediaMetadataRepositoryError: routeErrorHandler,
+      MediaMetadataRepositoryError: routeErrorHandler
     }),
-    Effect.catchAllDefect(routeErrorHandler),
+    Effect.catchAllDefect(routeErrorHandler)
   );

@@ -1,0 +1,35 @@
+{
+  "ignorePatterns": [
+    "**/node_modules/**",
+    "**/dist/**",
+    "**/build/**",
+    "**/.output/**",
+    "**/.next/**",
+    "**/.turbo/**",
+    "**/coverage/**",
+    "**/*.gen.ts",
+    "**/*.gen.tsx",
+    "**/*.md"
+  ],
+  "jsPlugins": ["./lint/index.ts"],
+  "rules": {
+    "typescript/no-explicit-any": "error",
+    "typescript/consistent-type-assertions": ["error", { "assertionStyle": "never" }],
+    "typescript/consistent-type-imports": "error",
+    "typescript/no-unused-vars": ["error", { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_" }],
+    "eslint/prefer-const": "error",
+    "eslint/object-shorthand": "error",
+    "eslint/no-redeclare": "off",
+    "media-diy/no-disable-validation": "error",
+    "media-diy/pipe-max-arguments": "error",
+    "media-diy/no-nested-layer-provide": "error",
+    "media-diy/no-service-option": "error",
+    "media-diy/no-void-expression": "error",
+    "media-diy/no-effect-ignore": "error",
+    "media-diy/no-effect-catchallcause": "error",
+    "media-diy/no-effect-asvoid": "error",
+    "media-diy/no-silent-error-swallow": "error",
+    "media-diy/no-satisfies": "error"
+  },
+  "overrides": [{ "files": ["**/*.test.ts"], "rules": { "media-diy/no-silent-error-swallow": "off" } }]
+}

@@ -1,19 +1,19 @@
 import { RpcClient, RpcSerialization } from "@effect/rpc";
 import { FetchHttpClient } from "@effect/platform";
-import { appServerFactory } from "../../src/http/app-server-factory";
-import { MediaType } from "../../src/domain/model/media";
-import { UPLOAD_MEDIA_ERROR_CODE } from "../../src/http/request/upload-media.request";
+import { appServerFactory } from "../../src/http/app-server-factory.js";
+import { MediaType } from "../../src/domain/model/media.js";
+import { UPLOAD_MEDIA_ERROR_CODE } from "../../src/http/request/upload-media.request.js";
 import { Effect, Either, Layer, pipe } from "effect";
 import { describe, it, expect, beforeAll } from "@effect/vitest";
 import { randomUUID } from "crypto";
 import { NodeRuntime } from "@effect/platform-node";
-import { MediaRpcs } from "../../src/http/rpc-handler/rpc-definitions";
+import { MediaRpcs } from "../../src/http/rpc-handler/rpc-definitions.js";
 
 const rpcClientLayer = pipe(
   RpcClient.layerProtocolHttp({
-    url: "http://localhost:9030/rpc",
+    url: "http://localhost:9030/rpc"
   }),
-  Layer.provide([FetchHttpClient.layer, RpcSerialization.layerJson]),
+  Layer.provide([FetchHttpClient.layer, RpcSerialization.layerJson])
 );
 
 describe("UploadMediaRequest", () => {
@@ -33,7 +33,7 @@ describe("UploadMediaRequest", () => {
         type: MediaType.PHOTO,
         filePath: "/s3/path/file1.png",
         capturedAt: new Date(),
-        id,
+        id
       });
 
       const failureOrSuccess = yield* client
@@ -44,7 +44,7 @@ describe("UploadMediaRequest", () => {
           type: MediaType.PHOTO,
           filePath: "/s3/path/file1.png",
           capturedAt: new Date(),
-          id,
+          id
         })
         .pipe(Effect.either);
 
@@ -61,9 +61,7 @@ describe("UploadMediaRequest", () => {
         throw new Error(`Expected error with errorCode, got: ${err._tag}`);
       }
 
-      expect(err.errorCode).toEqual(
-        UPLOAD_MEDIA_ERROR_CODE.MEDIA_ALREADY_EXISTS,
-      );
-    }).pipe(Effect.scoped, Effect.provide(rpcClientLayer)),
+      expect(err.errorCode).toEqual(UPLOAD_MEDIA_ERROR_CODE.MEDIA_ALREADY_EXISTS);
+    }).pipe(Effect.scoped, Effect.provide(rpcClientLayer))
   );
 });

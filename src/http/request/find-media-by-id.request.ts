@@ -1,35 +1,27 @@
 import { Schema as S } from "effect";
-import { MediaType } from "../../domain/model/media";
+import { MediaType } from "../../domain/model/media.js";
 
 export enum ERROR_CODE {
   SERVER_ERROR = "server_error",
-  NOT_FOUND = "not_found",
+  NOT_FOUND = "not_found"
 }
 
-export class FindMediaByIdError extends S.TaggedError<FindMediaByIdError>()(
-  "FindMediaByIdError",
-  {
-    errorCode: S.Enums(ERROR_CODE),
-  },
-) {}
+export class FindMediaByIdError extends S.TaggedError<FindMediaByIdError>()("FindMediaByIdError", {
+  errorCode: S.Enums(ERROR_CODE)
+}) {}
 
-export class FindMediaResponse extends S.Class<FindMediaResponse>(
-  "FindMediaResponse",
-)({
+export class FindMediaResponse extends S.Class<FindMediaResponse>("FindMediaResponse")({
   id: S.UUID,
   filePath: S.String,
   type: S.Enums(MediaType),
-  capturedAt: S.Date,
+  capturedAt: S.Date
 }) {}
 
-export class FindMediaByIdRequest extends S.TaggedRequest<FindMediaByIdRequest>()(
-  "FindMediaByIdRequest",
-  {
-    failure: FindMediaByIdError,
-    success: FindMediaResponse,
-    payload: {
-      ownerUserId: S.UUID,
-      id: S.UUID,
-    },
-  },
-) {}
+export class FindMediaByIdRequest extends S.TaggedRequest<FindMediaByIdRequest>()("FindMediaByIdRequest", {
+  failure: FindMediaByIdError,
+  success: FindMediaResponse,
+  payload: {
+    ownerUserId: S.UUID,
+    id: S.UUID
+  }
+}) {}

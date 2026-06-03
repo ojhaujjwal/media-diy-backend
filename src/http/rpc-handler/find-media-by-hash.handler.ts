@@ -1,10 +1,7 @@
-import { MediaMetadataRepository } from "../../domain/repository/media-metadata.repository";
+import { MediaMetadataRepository } from "../../domain/repository/media-metadata.repository.js";
 import { Effect } from "effect";
-import type { FindMediaByHashRequest } from "../request/find-media-by-hash.request";
-import {
-  FindMediaByHashError,
-  ERROR_CODE,
-} from "../request/find-media-by-hash.request";
+import type { FindMediaByHashRequest } from "../request/find-media-by-hash.request.js";
+import { FindMediaByHashError, ERROR_CODE } from "../request/find-media-by-hash.request.js";
 
 export const findMediaByHashHandler = (request: FindMediaByHashRequest) =>
   Effect.all([MediaMetadataRepository]).pipe(
@@ -15,21 +12,18 @@ export const findMediaByHashHandler = (request: FindMediaByHashRequest) =>
         sha256Hash: mediaMetadata.sha256Hash,
         type: mediaMetadata.type,
         capturedAt: mediaMetadata.capturedAt,
-        filePath: mediaMetadata.filePath,
-      }),
+        filePath: mediaMetadata.filePath
+      })
     ),
     Effect.catchTag("MediaMetadataRepositoryError", (e) =>
       Effect.logError(e).pipe(
         Effect.flatMap(() =>
           Effect.fail(
             new FindMediaByHashError({
-              errorCode:
-                e.reason == "RecordNotFound"
-                  ? ERROR_CODE.NOT_FOUND
-                  : ERROR_CODE.SERVER_ERROR,
-            }),
-          ),
-        ),
-      ),
-    ),
+              errorCode: e.reason == "RecordNotFound" ? ERROR_CODE.NOT_FOUND : ERROR_CODE.SERVER_ERROR
+            })
+          )
+        )
+      )
+    )
   );
