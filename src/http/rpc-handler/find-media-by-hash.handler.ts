@@ -1,18 +1,18 @@
 import { MediaMetadataRepository } from "../../domain/repository/media-metadata.repository.js";
 import { Effect } from "effect";
-import { FindMediaByHashError, ERROR_CODE } from "../request/find-media-by-hash.request.js";
+import { FindMediaByHashError, FindMediaByHashResponse, ERROR_CODE } from "../request/find-media-by-hash.request.js";
 
 export const findMediaByHashHandler = ({ sha256Hash }: { readonly sha256Hash: string }) =>
   Effect.gen(function* () {
     const repo = yield* MediaMetadataRepository;
     const mediaMetadata = yield* repo.findByHash(sha256Hash);
-    return {
+    return new FindMediaByHashResponse({
       id: mediaMetadata.id,
       sha256Hash: mediaMetadata.sha256Hash,
       type: mediaMetadata.type,
       capturedAt: mediaMetadata.capturedAt,
       filePath: mediaMetadata.filePath
-    };
+    });
   }).pipe(
     Effect.catchTag("MediaMetadataRepositoryError", (e) =>
       Effect.logError(e).pipe(

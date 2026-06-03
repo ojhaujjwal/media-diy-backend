@@ -1,7 +1,11 @@
 import { Effect } from "effect";
 import { MediaContentsRepository } from "../../domain/repository/media-contents.repository.js";
 import { randomUUID } from "crypto";
-import { ERROR_CODE, GenerateUploadPresignedUrlError } from "../request/generate-upload-presigned-url.request.js";
+import {
+  ERROR_CODE,
+  GenerateUploadPresignedUrlError,
+  PresignedUrlResponse
+} from "../request/generate-upload-presigned-url.request.js";
 import { errorHandler } from "./helpers.js";
 
 const generateFileName = (fileExtension: string) => {
@@ -26,7 +30,7 @@ export const generateUploadPresignedUrlHandler = ({
     const repo = yield* MediaContentsRepository;
     const filePath = generateFileName(fileExtension);
     const presignedUrl = yield* repo.generatePresignedUrlForUpload(mediaType, filePath);
-    return { filePath, presignedUrl };
+    return new PresignedUrlResponse({ filePath, presignedUrl });
   }).pipe(
     Effect.catchTags({
       MediaContentsRepositoryError: routeErrorHandler
