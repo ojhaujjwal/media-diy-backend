@@ -1,6 +1,5 @@
 import { Effect } from "effect";
 import { MediaContentsRepository } from "../../domain/repository/media-contents.repository.js";
-import { randomUUID } from "crypto";
 import {
   ERROR_CODE,
   GenerateUploadPresignedUrlError,
@@ -10,7 +9,7 @@ import { errorHandler } from "./helpers.js";
 
 const generateFileName = (fileExtension: string) => {
   const today = new Date();
-  return `${today.getFullYear()}/${today.getMonth() + 1}/${today.getDate()}/${randomUUID()}.${fileExtension}`;
+  return `${today.getFullYear()}/${today.getMonth() + 1}/${today.getDate()}/${crypto.randomUUID()}.${fileExtension}`;
 };
 
 const routeErrorHandler = errorHandler({

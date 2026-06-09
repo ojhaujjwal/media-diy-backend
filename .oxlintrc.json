@@ -31,6 +31,5 @@
     "media-diy/no-effect-asvoid": "error",
     "media-diy/no-silent-error-swallow": "error",
     "media-diy/no-satisfies": "error"
-  },
-  "overrides": [{ "files": ["**/*.test.ts"], "rules": { "media-diy/no-silent-error-swallow": "off" } }]
+  }
 }

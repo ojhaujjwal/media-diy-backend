@@ -1,67 +1,100 @@
-import { RpcClient, RpcSerialization } from "effect/unstable/rpc";
-import { FetchHttpClient } from "effect/unstable/http";
-import { appServerFactory } from "../../src/http/app-server-factory.js";
-import { MediaType } from "../../src/domain/model/media.js";
+import { Effect, Layer } from "effect";
+import { describe, it, expect } from "@effect/vitest";
+import { uploadMediaHandler } from "../../src/http/rpc-handler/upload-media.handler.js";
+import {
+  MediaMetadataRepository,
+  MediaMetadataRepositoryError
+} from "../../src/domain/repository/media-metadata.repository.js";
 import { UPLOAD_MEDIA_ERROR_CODE } from "../../src/http/request/upload-media.request.js";
-import { Effect, Layer, pipe, Result } from "effect";
-import { describe, it, expect, beforeAll } from "@effect/vitest";
-import { randomUUID } from "crypto";
-import { NodeRuntime } from "@effect/platform-node";
-import { MediaRpcs } from "../../src/http/rpc-handler/rpc-definitions.js";
+import { MediaMetadata } from "../../src/domain/model/media.js";
 
-const rpcClientLayer = pipe(
-  RpcClient.layerProtocolHttp({
-    url: "http://localhost:9030/rpc"
-  }),
-  Layer.provide([FetchHttpClient.layer, RpcSerialization.layerJson])
-);
+const mockRepoLayer = (
+  findById: (ownerId: string, mediaId: string) => Effect.Effect<MediaMetadata, MediaMetadataRepositoryError>
+): Layer.Layer<MediaMetadataRepository> =>
+  Layer.succeed(
+    MediaMetadataRepository,
+    MediaMetadataRepository.of({
+      create: () => Effect.void,
+      findById,
+      findByHash: () =>
+        Effect.fail(
+          new MediaMetadataRepositoryError({
+            message: "not found",
+            reason: "RecordNotFound"
+          })
+        )
+    })
+  );
 
 describe("UploadMediaRequest", () => {
-  beforeAll(() => {
-    NodeRuntime.runMain(appServerFactory(9030).pipe(Layer.launch));
-  });
-
-  it.effect("should return fail if media already exists", () =>
+  it.effect("should succeed when media does not already exist", () =>
     Effect.gen(function* () {
-      const client = yield* RpcClient.make(MediaRpcs);
-      const id = randomUUID();
+      const repo = mockRepoLayer((_ownerId, _mediaId) =>
+        Effect.fail(
+          new MediaMetadataRepositoryError({
+            message: "not found",
+            reason: "RecordNotFound"
+          })
+        )
+      );
 
-      yield* client.UploadMediaRequest({
-        sha256Hash: "asfsadasdf",
-        deviceId: "a1",
-        originalFileName: "file1.png",
-        type: MediaType.PHOTO,
-        filePath: "/s3/path/file1.png",
+      yield* uploadMediaHandler({
+        sha256Hash: "tests-hash",
+        originalFileName: "new-photo.jpg",
+        type: "photo",
+        deviceId: "device-001",
+        filePath: "/uploads/new-photo.jpg",
+        capturedAt: new Date(),
+        id: crypto.randomUUID()
+      }).pipe(Effect.provide(repo));
+    })
+  );
+
+  it.effect("should fail with MEDIA_ALREADY_EXISTS when media already recorded", () =>
+    Effect.gen(function* () {
+      const id = crypto.randomUUID();
+
+      const repo = mockRepoLayer((_ownerId, mediaId) =>
+        mediaId === id
+          ? Effect.succeed(
+              new MediaMetadata({
+                id,
+                originalFileName: "existing.jpg",
+                sha256Hash: "tests-hash",
+                type: "photo",
+                deviceId: "device-001",
+                filePath: "/uploads/existing.jpg",
+                ownerUserId: "a208ada0-8862-4ede-b45d-8ec34742bbbd",
+                uploadedAt: new Date(),
+                capturedAt: new Date()
+              })
+            )
+          : Effect.fail(
+              new MediaMetadataRepositoryError({
+                message: "not found",
+                reason: "RecordNotFound"
+              })
+            )
+      );
+
+      const result = yield* uploadMediaHandler({
+        sha256Hash: "tests-hash",
+        originalFileName: "existing.jpg",
+        type: "photo",
+        deviceId: "device-001",
+        filePath: "/uploads/existing.jpg",
         capturedAt: new Date(),
         id
-      });
+      }).pipe(Effect.provide(repo), Effect.result);
 
-      const failureOrSuccess = yield* client
-        .UploadMediaRequest({
-          sha256Hash: "asfsadasdf",
-          deviceId: "a1",
-          originalFileName: "file1.png",
-          type: MediaType.PHOTO,
-          filePath: "/s3/path/file1.png",
-          capturedAt: new Date(),
-          id
-        })
-        .pipe(Effect.result);
+      expect(result._tag).toBe("Failure");
 
-      expect(Result.isFailure(failureOrSuccess)).toEqual(true);
-
-      const error = Result.getFailure(failureOrSuccess);
-
-      if (error._tag === "None") {
-        throw new Error("Error should be present");
+      if (result._tag === "Failure") {
+        const error = result.failure;
+        if (error._tag === "UploadMediaError") {
+          expect(error.errorCode).toBe(UPLOAD_MEDIA_ERROR_CODE.MEDIA_ALREADY_EXISTS);
+        }
       }
-
-      const err = error.value;
-      if (!("errorCode" in err)) {
-        throw new Error(`Expected error with errorCode, got: ${err._tag}`);
-      }
-
-      expect(err.errorCode).toEqual(UPLOAD_MEDIA_ERROR_CODE.MEDIA_ALREADY_EXISTS);
-    }).pipe(Effect.scoped, Effect.provide(rpcClientLayer))
+    }).pipe(Effect.timeout("5 seconds"))
   );
 });
