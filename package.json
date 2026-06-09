@@ -7,10 +7,9 @@
   "type": "module",
   "scripts": {
     "test": "vitest run",
-    "build": "tsc",
     "typecheck": "tsc --noEmit",
-    "dev": "nodemon --exec 'tsx --env-file=.env' --watch src/ src/http/run-server.ts",
-    "upload": "tsx src/cli/upload-media-client.ts",
+    "dev": "alchemy dev",
+    "deploy": "alchemy deploy",
     "lint": "NODE_OPTIONS='--import tsx/esm' oxlint --disable-nested-config",
     "lint:fix": "NODE_OPTIONS='--import tsx/esm' oxlint --disable-nested-config --fix",
     "format": "oxfmt --write",
@@ -20,27 +19,24 @@
     "prepare": "husky && effect-language-service patch"
   },
   "dependencies": {
-    "@aws-sdk/client-dynamodb": "^3.1060.0",
-    "@effect-aws/client-dynamodb": "^2.0.0-beta.4",
-    "@effect-aws/client-s3": "^2.0.0-beta.4",
-    "@effect/platform-node": "^4.0.0-beta.76",
+    "@aws-sdk/client-s3": "^3.1061.0",
+    "@aws-sdk/s3-request-presigner": "^3.1061.0",
+    "alchemy": "2.0.0-beta.51",
     "effect": "^4.0.0-beta.76",
-    "fast-check": "^3.18.0",
-    "minio": "^8.0.0"
+    "fast-check": "^3.18.0"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "^4.20260604.1",
     "@effect/language-service": "^0.86.2",
     "@effect/vitest": "^4.0.0-beta.76",
     "@oxlint/plugins": "^1.68.0",
     "@types/node": "^22.0.0",
-    "dotenv": "^16.4.5",
+    "dotenv": "^17.4.2",
     "husky": "^9.1.7",
     "lint-staged": "^17.0.7",
-    "nodemon": "^3.1.0",
     "oxfmt": "^0.53.0",
     "oxlint": "^1.68.0",
-    "ts-node": "^10.9.2",
-    "tsx": "^4.7.1",
+    "tsx": "^4.22.4",
     "typescript": "^5.8.3",
     "vitest": "^3.2.0"
   },
