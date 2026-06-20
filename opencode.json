@@ -1,0 +1,9 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "references": {
+    "alchemy-effect": {
+      "repository": "alchemy-run/alchemy-effect",
+      "description": "Use for alchemy + Effect integration patterns, cloud resource definitions, and idiomatic Effect usage in infra-as-code contexts. Reference source of truth for alchemy-effect API design and usage."
+    }
+  }
+}
