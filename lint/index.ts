@@ -9,6 +9,7 @@ import noEffectCatchallcause from "./rules/no-effect-catchallcause.js";
 import noEffectAsvoid from "./rules/no-effect-asvoid.js";
 import noSilentErrorSwallow from "./rules/no-silent-error-swallow.js";
 import noSatisfies from "./rules/no-satisfies.js";
+import noOxlintDisable from "./rules/no-oxlint-disable.js";
 
 export default definePlugin({
   meta: { name: "media-diy" },
@@ -22,6 +23,7 @@ export default definePlugin({
     "no-effect-catchallcause": noEffectCatchallcause,
     "no-effect-asvoid": noEffectAsvoid,
     "no-silent-error-swallow": noSilentErrorSwallow,
-    "no-satisfies": noSatisfies
+    "no-satisfies": noSatisfies,
+    "no-oxlint-disable": noOxlintDisable
   }
 });
