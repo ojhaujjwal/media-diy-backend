@@ -11,7 +11,7 @@ export const findMediaByHashHandler = ({ sha256Hash }: { readonly sha256Hash: st
       sha256Hash: mediaMetadata.sha256Hash,
       type: mediaMetadata.type,
       capturedAt: mediaMetadata.capturedAt,
-      filePath: mediaMetadata.filePath
+      s3KeyFull: mediaMetadata.s3KeyFull
     });
   }).pipe(
     Effect.catchTag("MediaMetadataRepositoryError", (e) =>

@@ -20,8 +20,8 @@ export const FILE_EXTENSION_MAPPING: Record<MediaType, readonly MediaFileExtensi
 export const ExifMetadata = S.Struct({
   width: S.Number,
   height: S.Number,
-  make: S.String,
-  model: S.String,
+  make: S.optional(S.String),
+  model: S.optional(S.String),
   exposureTime: S.optional(S.String),
   aperture: S.optional(S.String),
   focalLength: S.optional(S.String),
@@ -34,12 +34,14 @@ export const ExifMetadata = S.Struct({
   exposureProgram: S.optional(S.Number),
   exposureBias: S.optional(S.Number),
   software: S.optional(S.String),
-  gps: S.Struct({
-    latitude: S.Number,
-    longitude: S.Number,
-    altitude: S.Number,
-    timestamp: S.Date
-  })
+  gps: S.optional(
+    S.Struct({
+      latitude: S.optional(S.Number),
+      longitude: S.optional(S.Number),
+      altitude: S.optional(S.Number),
+      timestamp: S.optional(S.Date)
+    })
+  )
 });
 
 export class MediaMetadata extends S.Class<MediaMetadata>("MediaMetadata")({
@@ -48,9 +50,13 @@ export class MediaMetadata extends S.Class<MediaMetadata>("MediaMetadata")({
   sha256Hash: S.String,
   type: S.Enum(MediaType),
   deviceId: S.String,
-  filePath: S.String,
+  s3KeyFull: S.String,
+  s3KeyThumb: S.optional(S.String),
   ownerUserId: S.String,
   uploadedAt: S.Date,
   capturedAt: S.Date,
+  smbPath: S.String,
+  fileSize: S.Number,
+  fileMtime: S.String,
   exif: S.optional(ExifMetadata)
 }) {}

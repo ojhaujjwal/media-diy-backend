@@ -30,7 +30,9 @@ describe("UploadMediaRequest", () => {
                 : Effect.fail(new MediaMetadataRepositoryError({ message: "not found", reason: "RecordNotFound" }));
             },
             findByHash: () =>
-              Effect.fail(new MediaMetadataRepositoryError({ message: "not found", reason: "RecordNotFound" }))
+              Effect.fail(new MediaMetadataRepositoryError({ message: "not found", reason: "RecordNotFound" })),
+            findExistingSmbPaths: () => Effect.succeed([]),
+            searchMedia: () => Effect.succeed({ results: [], total: 0 })
           })
         ),
         Layer.succeed(
@@ -48,9 +50,13 @@ describe("UploadMediaRequest", () => {
         originalFileName: "test.txt",
         type: "video",
         deviceId: "device-002",
-        filePath: "/uploads/test.txt",
+        s3KeyFull: "/uploads/test.txt",
+        s3KeyThumb: undefined,
         capturedAt: new Date(),
-        id
+        id,
+        smbPath: "/smb/photos/test.txt",
+        fileSize: 512,
+        fileMtime: "2024-01-15T10:30:00Z"
       }).pipe(Effect.provide(repo));
 
       const failure = yield* uploadMediaHandler({
@@ -58,9 +64,13 @@ describe("UploadMediaRequest", () => {
         originalFileName: "test.txt",
         type: "video",
         deviceId: "device-002",
-        filePath: "/uploads/test.txt",
+        s3KeyFull: "/uploads/test.txt",
+        s3KeyThumb: undefined,
         capturedAt: new Date(),
-        id
+        id,
+        smbPath: "/smb/photos/test.txt",
+        fileSize: 512,
+        fileMtime: "2024-01-15T10:30:00Z"
       }).pipe(Effect.provide(repo), Effect.exit);
 
       expect(Exit.isFailure(failure)).toBe(true);

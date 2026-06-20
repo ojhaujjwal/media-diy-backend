@@ -12,7 +12,7 @@ export class FindMediaByIdError extends S.TaggedErrorClass<FindMediaByIdError>()
 
 export class FindMediaResponse extends S.Class<FindMediaResponse>("FindMediaResponse")({
   id: S.String.check(S.isUUID()),
-  filePath: S.String,
+  s3KeyFull: S.String,
   type: S.Enum(MediaType),
   capturedAt: S.Date
 }) {}

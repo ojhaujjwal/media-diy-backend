@@ -10,7 +10,7 @@ export const findMediaByIdHandler = ({ ownerUserId, id }: { readonly ownerUserId
       id: mediaMetadata.id,
       type: mediaMetadata.type,
       capturedAt: mediaMetadata.capturedAt,
-      filePath: mediaMetadata.filePath
+      s3KeyFull: mediaMetadata.s3KeyFull
     });
   }).pipe(
     Effect.catchTag("MediaMetadataRepositoryError", (e) =>

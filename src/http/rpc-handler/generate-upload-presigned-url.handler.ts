@@ -27,9 +27,9 @@ export const generateUploadPresignedUrlHandler = ({
 }) =>
   Effect.gen(function* () {
     const repo = yield* MediaContentsRepository;
-    const filePath = generateFileName(fileExtension);
-    const presignedUrl = yield* repo.generatePresignedUrlForUpload(mediaType, filePath);
-    return new PresignedUrlResponse({ filePath, presignedUrl });
+    const s3KeyFull = generateFileName(fileExtension);
+    const presignedUrl = yield* repo.generatePresignedUrlForUpload(mediaType, s3KeyFull);
+    return new PresignedUrlResponse({ s3KeyFull, presignedUrl });
   }).pipe(
     Effect.catchTags({
       MediaContentsRepositoryError: routeErrorHandler

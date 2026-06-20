@@ -12,5 +12,5 @@ export class GenerateUploadPresignedUrlError extends S.Class<GenerateUploadPresi
 
 export class PresignedUrlResponse extends S.Class<PresignedUrlResponse>("PresignedUrlResponse")({
   presignedUrl: S.String,
-  filePath: S.String
+  s3KeyFull: S.String
 }) {}

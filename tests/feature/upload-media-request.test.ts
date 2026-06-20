@@ -22,7 +22,9 @@ const mockRepoLayer = (
             message: "not found",
             reason: "RecordNotFound"
           })
-        )
+        ),
+      findExistingSmbPaths: () => Effect.succeed([]),
+      searchMedia: () => Effect.succeed({ results: [], total: 0 })
     })
   );
 
@@ -43,9 +45,13 @@ describe("UploadMediaRequest", () => {
         originalFileName: "new-photo.jpg",
         type: "photo",
         deviceId: "device-001",
-        filePath: "/uploads/new-photo.jpg",
+        s3KeyFull: "/uploads/new-photo.jpg",
+        s3KeyThumb: undefined,
         capturedAt: new Date(),
-        id: crypto.randomUUID()
+        id: crypto.randomUUID(),
+        smbPath: "/smb/photos/new-photo.jpg",
+        fileSize: 1024,
+        fileMtime: "2024-01-15T10:30:00Z"
       }).pipe(Effect.provide(repo));
     })
   );
@@ -63,10 +69,13 @@ describe("UploadMediaRequest", () => {
                 sha256Hash: "tests-hash",
                 type: "photo",
                 deviceId: "device-001",
-                filePath: "/uploads/existing.jpg",
+                s3KeyFull: "/uploads/existing.jpg",
                 ownerUserId: "a208ada0-8862-4ede-b45d-8ec34742bbbd",
                 uploadedAt: new Date(),
-                capturedAt: new Date()
+                capturedAt: new Date(),
+                smbPath: "/smb/photos/existing.jpg",
+                fileSize: 2048,
+                fileMtime: "2024-01-15T10:30:00Z"
               })
             )
           : Effect.fail(
@@ -82,9 +91,13 @@ describe("UploadMediaRequest", () => {
         originalFileName: "existing.jpg",
         type: "photo",
         deviceId: "device-001",
-        filePath: "/uploads/existing.jpg",
+        s3KeyFull: "/uploads/existing.jpg",
+        s3KeyThumb: undefined,
         capturedAt: new Date(),
-        id
+        id,
+        smbPath: "/smb/photos/existing.jpg",
+        fileSize: 2048,
+        fileMtime: "2024-01-15T10:30:00Z"
       }).pipe(Effect.provide(repo), Effect.result);
 
       expect(result._tag).toBe("Failure");

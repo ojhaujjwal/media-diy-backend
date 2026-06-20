@@ -1,6 +1,8 @@
 import { Effect } from "effect";
 import { UPLOAD_MEDIA_ERROR_CODE, UploadMediaError } from "../request/upload-media.request.js";
 import { MediaMetadataRepository } from "../../domain/repository/media-metadata.repository.js";
+import type { UploadMediaRequest } from "./rpc-definitions.js";
+import type { Rpc } from "effect/unstable/rpc";
 import { errorHandler } from "./helpers.js";
 
 const routeErrorHandler = errorHandler({
@@ -14,18 +16,15 @@ export const uploadMediaHandler = ({
   originalFileName,
   type,
   deviceId,
-  filePath,
+  s3KeyFull,
+  s3KeyThumb,
   capturedAt,
-  id
-}: {
-  readonly sha256Hash: string;
-  readonly originalFileName: string;
-  readonly type: "photo" | "video" | "live_photo";
-  readonly deviceId: string;
-  readonly filePath: string;
-  readonly capturedAt: Date;
-  readonly id: string;
-}) =>
+  id,
+  smbPath,
+  fileSize,
+  fileMtime,
+  exif
+}: Rpc.Payload<typeof UploadMediaRequest>) =>
   Effect.gen(function* () {
     const ownerUserId = "a208ada0-8862-4ede-b45d-8ec34742bbbd";
 
@@ -47,9 +46,14 @@ export const uploadMediaHandler = ({
     yield* mediaMetadataRepository.create({
       originalFileName,
       deviceId,
-      filePath,
+      s3KeyFull,
+      s3KeyThumb,
       sha256Hash,
       type,
+      smbPath,
+      fileSize,
+      fileMtime,
+      exif,
       capturedAt,
       uploadedAt: new Date(),
       id,

@@ -5,7 +5,7 @@ import {
   MediaMetadataRepository,
   MediaMetadataRepositoryError
 } from "../../domain/repository/media-metadata.repository.js";
-import { MediaMetadata } from "../../domain/model/media.js";
+import { MediaMetadata, ExifMetadata } from "../../domain/model/media.js";
 import { MediaDb } from "../../resources/db.js";
 
 const MediaTypeLiteral = Schema.Literals(["photo", "video", "live_photo"] as const);
@@ -15,12 +15,37 @@ const D1MediaRow = Schema.Struct({
   sha256_hash: Schema.String,
   type: MediaTypeLiteral,
   device_id: Schema.String,
-  file_path: Schema.String,
+  s3_key_full: Schema.String,
+  s3_key_thumb: Schema.optional(Schema.String),
   owner_user_id: Schema.String,
   original_file_name: Schema.String,
   captured_at: Schema.String,
-  uploaded_at: Schema.String
+  uploaded_at: Schema.String,
+  smb_path: Schema.String,
+  file_size: Schema.Number,
+  file_mtime: Schema.String,
+  exif: Schema.optional(Schema.String)
 });
+
+const parseRowSync = (record: Record<string, unknown>): MediaMetadata => {
+  const row = Schema.decodeUnknownSync(D1MediaRow)(record);
+  return new MediaMetadata({
+    id: row.id,
+    originalFileName: row.original_file_name,
+    sha256Hash: row.sha256_hash,
+    type: row.type,
+    deviceId: row.device_id,
+    s3KeyFull: row.s3_key_full,
+    s3KeyThumb: row.s3_key_thumb,
+    ownerUserId: row.owner_user_id,
+    uploadedAt: new Date(row.uploaded_at),
+    capturedAt: new Date(row.captured_at),
+    smbPath: row.smb_path,
+    fileSize: row.file_size,
+    fileMtime: row.file_mtime,
+    exif: row.exif ? Schema.decodeUnknownSync(ExifMetadata)(JSON.parse(row.exif)) : undefined
+  });
+};
 
 const parseRow = (row: Record<string, unknown> | null): Effect.Effect<MediaMetadata, MediaMetadataRepositoryError> => {
   if (!row) {
@@ -32,21 +57,7 @@ const parseRow = (row: Record<string, unknown> | null): Effect.Effect<MediaMetad
     );
   }
 
-  const record = Schema.decodeUnknownSync(D1MediaRow)(row);
-
-  return Effect.succeed(
-    new MediaMetadata({
-      id: record.id,
-      originalFileName: record.original_file_name,
-      sha256Hash: record.sha256_hash,
-      type: record.type,
-      deviceId: record.device_id,
-      filePath: record.file_path,
-      ownerUserId: record.owner_user_id,
-      uploadedAt: new Date(record.uploaded_at),
-      capturedAt: new Date(record.captured_at)
-    })
-  );
+  return Effect.succeed(parseRowSync(row));
 };
 
 const mapD1Error = (e: unknown) =>
@@ -67,19 +78,24 @@ export const MediaMetadataD1Live = Layer.effect(
         db
           .prepare(
             `INSERT INTO media_metadata
-             (id, sha256_hash, type, device_id, file_path, owner_user_id, original_file_name, captured_at, uploaded_at)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+             (id, sha256_hash, type, device_id, s3_key_full, s3_key_thumb, owner_user_id, original_file_name, captured_at, uploaded_at, smb_path, file_size, file_mtime, exif)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
           )
           .bind(
             metadata.id,
             metadata.sha256Hash,
             metadata.type,
             metadata.deviceId,
-            metadata.filePath,
+            metadata.s3KeyFull,
+            metadata.s3KeyThumb ?? null,
             metadata.ownerUserId,
             metadata.originalFileName,
             metadata.capturedAt.toISOString(),
-            metadata.uploadedAt.toISOString()
+            metadata.uploadedAt.toISOString(),
+            metadata.smbPath,
+            metadata.fileSize,
+            metadata.fileMtime,
+            metadata.exif ? JSON.stringify(Schema.encodeSync(ExifMetadata)(metadata.exif)) : null
           )
           .run()
           .pipe(Effect.mapError(mapD1Error), Effect.provideService(RuntimeContext, ctx)),
@@ -96,7 +112,100 @@ export const MediaMetadataD1Live = Layer.effect(
           .prepare("SELECT * FROM media_metadata WHERE sha256_hash = ?")
           .bind(sha256Hash)
           .first<Record<string, unknown>>()
-          .pipe(Effect.flatMap(parseRow), Effect.mapError(mapD1Error), Effect.provideService(RuntimeContext, ctx))
+          .pipe(Effect.flatMap(parseRow), Effect.mapError(mapD1Error), Effect.provideService(RuntimeContext, ctx)),
+
+      searchMedia: (criteria) =>
+        Effect.gen(function* () {
+          const where: string[] = [];
+          const params: unknown[] = [];
+
+          where.push("owner_user_id = ?");
+          params.push(criteria.ownerUserId);
+
+          if (criteria.dateFrom) {
+            where.push("captured_at >= ?");
+            params.push(criteria.dateFrom.toISOString());
+          }
+          if (criteria.dateTo) {
+            where.push("captured_at <= ?");
+            params.push(criteria.dateTo.toISOString());
+          }
+          if (criteria.cameraMake) {
+            where.push("camera_make = ?");
+            params.push(criteria.cameraMake);
+          }
+          if (criteria.cameraModel) {
+            where.push("camera_model = ?");
+            params.push(criteria.cameraModel);
+          }
+          if (criteria.gpsLatMin !== undefined) {
+            where.push("gps_lat >= ?");
+            params.push(criteria.gpsLatMin);
+          }
+          if (criteria.gpsLatMax !== undefined) {
+            where.push("gps_lat <= ?");
+            params.push(criteria.gpsLatMax);
+          }
+          if (criteria.gpsLonMin !== undefined) {
+            where.push("gps_lon >= ?");
+            params.push(criteria.gpsLonMin);
+          }
+          if (criteria.gpsLonMax !== undefined) {
+            where.push("gps_lon <= ?");
+            params.push(criteria.gpsLonMax);
+          }
+
+          const whereClause = where.join(" AND ");
+
+          const totalRow = yield* db
+            .prepare(`SELECT COUNT(*) as c FROM media_metadata WHERE ${whereClause}`)
+            .bind(...params)
+            .first<{ c: number }>()
+            .pipe(Effect.mapError(mapD1Error), Effect.provideService(RuntimeContext, ctx));
+
+          const total: number = totalRow?.c ?? 0;
+
+          const rows = yield* db
+            .prepare(`SELECT * FROM media_metadata WHERE ${whereClause} ORDER BY captured_at DESC LIMIT ? OFFSET ?`)
+            .bind(...params, criteria.limit, criteria.offset)
+            .all<Record<string, unknown>>()
+            .pipe(Effect.mapError(mapD1Error), Effect.provideService(RuntimeContext, ctx));
+
+          const results = rows.results.map(parseRowSync);
+
+          return { results, total };
+        }).pipe(Effect.mapError(mapD1Error), Effect.provideService(RuntimeContext, ctx)),
+
+      findExistingSmbPaths: (tuples) =>
+        Effect.gen(function* () {
+          const results: string[] = [];
+          const inputLookup = new Map<string, { fileSize: number; fileMtime: string }>();
+          for (const t of tuples) {
+            inputLookup.set(t.smbPath, { fileSize: t.fileSize, fileMtime: t.fileMtime });
+          }
+
+          const smbPaths = tuples.map((t) => t.smbPath);
+
+          for (let i = 0; i < smbPaths.length; i += 500) {
+            const chunk = smbPaths.slice(i, i + 500);
+            const placeholders = chunk.map(() => "?").join(",");
+
+            const rows = yield* db
+              .prepare(`SELECT smb_path, file_size, file_mtime FROM media_metadata WHERE smb_path IN (${placeholders})`)
+              .bind(...chunk)
+              .all<{ smb_path: string; file_size: number; file_mtime: string }>()
+              .pipe(Effect.mapError(mapD1Error), Effect.provideService(RuntimeContext, ctx));
+
+            for (const row of rows.results) {
+              const input = inputLookup.get(row.smb_path);
+              if (input && input.fileSize === row.file_size && input.fileMtime === row.file_mtime) {
+                results.push(row.smb_path);
+              }
+            }
+          }
+
+          return results;
+        })
     });
   })
 );

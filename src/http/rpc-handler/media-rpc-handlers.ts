@@ -4,12 +4,16 @@ import { uploadMediaHandler } from "./upload-media.handler.js";
 import { generateUploadPresignedUrlHandler } from "./generate-upload-presigned-url.handler.js";
 import { findMediaByIdHandler } from "./find-media-by-id.handler.js";
 import { findMediaByHashHandler } from "./find-media-by-hash.handler.js";
+import { findExistingMediaByFastScanHandler } from "./find-existing-media-by-fast-scan.handler.js";
+import { searchMediaHandler } from "./search-media.handler.js";
 
 export const MediaRpcLive = MediaRpcs.toLayer(
   Effect.succeed({
     UploadMediaRequest: uploadMediaHandler,
     GenerateUploadPresignedUrlRequest: generateUploadPresignedUrlHandler,
     FindMediaByIdRequest: findMediaByIdHandler,
-    FindMediaByHashRequest: findMediaByHashHandler
+    FindMediaByHashRequest: findMediaByHashHandler,
+    FindExistingMediaByFastScanRequest: findExistingMediaByFastScanHandler,
+    SearchMediaRequest: searchMediaHandler
   })
 );

@@ -13,7 +13,7 @@ export class FindMediaByHashError extends S.TaggedErrorClass<FindMediaByHashErro
 export class FindMediaByHashResponse extends S.Class<FindMediaByHashResponse>("FindMediaByHashResponse")({
   id: S.String.check(S.isUUID()),
   sha256Hash: S.String,
-  filePath: S.String,
+  s3KeyFull: S.String,
   type: S.Enum(MediaType),
   capturedAt: S.Date
 }) {}
