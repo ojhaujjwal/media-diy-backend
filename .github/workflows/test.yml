@@ -8,15 +8,6 @@ jobs:
     name: unit-test
     runs-on: ubuntu-latest
     steps:
-      - name: Download minio
-        run: wget https://dl.min.io/server/minio/release/linux-amd64/minio && chmod +x minio && mkdir -p ./minio-data
-        working-directory: /tmp
-      - uses: JarvusInnovations/background-action@v1
-        name: Run minio on background
-        with:
-          run: ./minio server ./minio-data
-          wait-on: http://localhost:9000/minio/health/live
-          working-directory: /tmp
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
@@ -28,21 +19,32 @@ jobs:
         run: pnpm format-check
       - name: lint
         run: pnpm lint
-      - name: Setup DynamoDB Local
-        uses: rrainn/dynamodb-action@v4.0.0
-        with:
-          delayTransientStatuses: # undefined by default
-          optimizeDbBeforeStartup: # undefined by default
-          port: 8000
-          cors: "*"
-      - name: setup dynamo db
-        run: bin/setup-dynamo-table
-
-      - name: setup s3 bucket
-        run: bin/setup-s3-bucket
-
+      - name: typecheck
+        run: pnpm typecheck
       - name: vitest
         run: pnpm test
+
+  cloud-integration:
+    name: cloud-integration
+    runs-on: ubuntu-latest
+    if: ${{ secrets.CLOUDFLARE_API_TOKEN != '' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+      - uses: pnpm/action-setup@v4
+      - name: pnpm install
+        run: pnpm install
+      - name: vitest integration
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          R2_BUCKET_NAME: ${{ secrets.R2_BUCKET_NAME }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+        run: pnpm test:integration
 
   call-workflow-passing-data:
     if: github.ref == 'refs/heads/main'

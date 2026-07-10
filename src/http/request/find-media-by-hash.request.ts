@@ -15,5 +15,5 @@ export class FindMediaByHashResponse extends S.Class<FindMediaByHashResponse>("F
   sha256Hash: S.String,
   s3KeyFull: S.String,
   type: S.Enum(MediaType),
-  capturedAt: S.Date
+  capturedAt: S.DateTimeUtc
 }) {}

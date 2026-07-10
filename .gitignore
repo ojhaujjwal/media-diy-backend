@@ -5,3 +5,5 @@ node_modules
 /docker/dynamodb
 .terraform
 /.ralph-auto
+.DS_Store
+/.env.test

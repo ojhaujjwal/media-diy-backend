@@ -19,7 +19,7 @@ export const UploadMediaRequest = Rpc.make("UploadMediaRequest", {
     deviceId: S.String,
     s3KeyFull: S.String,
     s3KeyThumb: S.optional(S.String),
-    capturedAt: S.Date,
+    capturedAt: S.DateTimeUtc,
     id: S.String.check(S.isUUID()),
     smbPath: S.String,
     fileSize: S.Number,
@@ -73,8 +73,8 @@ export const FindExistingMediaByFastScanRequest = Rpc.make("FindExistingMediaByF
 export const SearchMediaRequest = Rpc.make("SearchMediaRequest", {
   payload: {
     ownerUserId: S.String.check(S.isUUID()),
-    dateFrom: S.optional(S.Date),
-    dateTo: S.optional(S.Date),
+    dateFrom: S.optional(S.DateTimeUtc),
+    dateTo: S.optional(S.DateTimeUtc),
     cameraMake: S.optional(S.String),
     cameraModel: S.optional(S.String),
     gpsLatMin: S.optional(S.Number),

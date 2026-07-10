@@ -1,4 +1,5 @@
 import * as Cloudflare from "alchemy/Cloudflare";
+import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import { RpcServer, RpcSerialization } from "effect/unstable/rpc";
@@ -15,11 +16,19 @@ const appLayer = MediaRpcLive.pipe(Layer.provideMerge(repoLayer), Layer.provideM
 
 const impl = RpcServer.toHttpEffect(MediaRpcs).pipe(Effect.provide(appLayer));
 
-export default Cloudflare.Worker(
+const Worker: Effect.Effect<Cloudflare.Worker, never, Cloudflare.Providers> = Cloudflare.Worker(
   "MediaWorker",
   {
     main: import.meta.filename,
-    compatibility: { flags: ["nodejs_compat"] }
+    compatibility: { flags: ["nodejs_compat"] },
+    env: {
+      R2_ACCOUNT_ID: Config.string("R2_ACCOUNT_ID"),
+      R2_BUCKET_NAME: Config.string("R2_BUCKET_NAME"),
+      R2_ACCESS_KEY_ID: Config.redacted("R2_ACCESS_KEY_ID"),
+      R2_SECRET_ACCESS_KEY: Config.redacted("R2_SECRET_ACCESS_KEY")
+    }
   },
   Effect.map(impl, (fetch) => ({ fetch }))
 );
+
+export default Worker;

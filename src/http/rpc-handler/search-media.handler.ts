@@ -1,4 +1,5 @@
 import { Effect } from "effect";
+import type { DateTime } from "effect";
 import { SearchMediaError, SearchMediaResponse, MediaSummary, ERROR_CODE } from "../request/search-media.request.js";
 import { MediaMetadataRepository } from "../../domain/repository/media-metadata.repository.js";
 import { errorHandler } from "./helpers.js";
@@ -11,8 +12,8 @@ const routeErrorHandler = errorHandler({
 
 export const searchMediaHandler = (payload: {
   readonly ownerUserId: string;
-  readonly dateFrom?: Date | undefined;
-  readonly dateTo?: Date | undefined;
+  readonly dateFrom?: DateTime.Utc | undefined;
+  readonly dateTo?: DateTime.Utc | undefined;
   readonly cameraMake?: string | undefined;
   readonly cameraModel?: string | undefined;
   readonly gpsLatMin?: number | undefined;

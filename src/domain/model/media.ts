@@ -39,7 +39,7 @@ export const ExifMetadata = S.Struct({
       latitude: S.optional(S.Number),
       longitude: S.optional(S.Number),
       altitude: S.optional(S.Number),
-      timestamp: S.optional(S.Date)
+      timestamp: S.optional(S.DateTimeUtcFromString)
     })
   )
 });
@@ -53,8 +53,8 @@ export class MediaMetadata extends S.Class<MediaMetadata>("MediaMetadata")({
   s3KeyFull: S.String,
   s3KeyThumb: S.optional(S.String),
   ownerUserId: S.String,
-  uploadedAt: S.Date,
-  capturedAt: S.Date,
+  uploadedAt: S.DateTimeUtc,
+  capturedAt: S.DateTimeUtc,
   smbPath: S.String,
   fileSize: S.Number,
   fileMtime: S.String,

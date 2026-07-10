@@ -1,4 +1,4 @@
-import { Effect, Exit, Layer } from "effect";
+import { Cause, DateTime, Effect, Exit, Layer, Option } from "effect";
 import { describe, it, expect } from "@effect/vitest";
 import { uploadMediaHandler } from "../../src/http/rpc-handler/upload-media.handler.js";
 import {
@@ -25,7 +25,7 @@ describe("UploadMediaRequest", () => {
               }),
             findById: (_ownerId, mediaId) => {
               const found = stored[mediaId];
-              return found
+              return found !== undefined
                 ? Effect.succeed(found)
                 : Effect.fail(new MediaMetadataRepositoryError({ message: "not found", reason: "RecordNotFound" }));
             },
@@ -52,7 +52,7 @@ describe("UploadMediaRequest", () => {
         deviceId: "device-002",
         s3KeyFull: "/uploads/test.txt",
         s3KeyThumb: undefined,
-        capturedAt: new Date(),
+        capturedAt: DateTime.nowUnsafe(),
         id,
         smbPath: "/smb/photos/test.txt",
         fileSize: 512,
@@ -66,7 +66,7 @@ describe("UploadMediaRequest", () => {
         deviceId: "device-002",
         s3KeyFull: "/uploads/test.txt",
         s3KeyThumb: undefined,
-        capturedAt: new Date(),
+        capturedAt: DateTime.nowUnsafe(),
         id,
         smbPath: "/smb/photos/test.txt",
         fileSize: 512,
@@ -76,9 +76,10 @@ describe("UploadMediaRequest", () => {
       expect(Exit.isFailure(failure)).toBe(true);
 
       if (Exit.isFailure(failure)) {
-        const cause = failure.cause;
-        if (cause.failure._tag === "UploadMediaError") {
-          expect(cause.failure.errorCode).toBe(UPLOAD_MEDIA_ERROR_CODE.MEDIA_ALREADY_EXISTS);
+        const error = Option.getOrThrow(Cause.findErrorOption(failure.cause));
+        expect(error._tag).toBe("UploadMediaError");
+        if (error._tag === "UploadMediaError") {
+          expect(error.errorCode).toBe(UPLOAD_MEDIA_ERROR_CODE.MEDIA_ALREADY_EXISTS);
         }
       }
     }).pipe(Effect.timeout("5 seconds")));

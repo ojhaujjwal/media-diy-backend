@@ -1,3 +1,4 @@
+// @effect-diagnostics *:off
 import { definePlugin } from "@oxlint/plugins";
 import noDisableValidation from "./rules/no-disable-validation.js";
 import pipeMaxArguments from "./rules/pipe-max-arguments.js";
@@ -10,6 +11,10 @@ import noEffectAsvoid from "./rules/no-effect-asvoid.js";
 import noSilentErrorSwallow from "./rules/no-silent-error-swallow.js";
 import noSatisfies from "./rules/no-satisfies.js";
 import noOxlintDisable from "./rules/no-oxlint-disable.js";
+import noEffectAny from "./rules/no-effect-any.js";
+import noAsyncAwait from "./rules/no-async-await.js";
+import noRawDate from "./rules/no-raw-date.js";
+import noProcess from "./rules/no-process.js";
 
 export default definePlugin({
   meta: { name: "media-diy" },
@@ -24,6 +29,10 @@ export default definePlugin({
     "no-effect-asvoid": noEffectAsvoid,
     "no-silent-error-swallow": noSilentErrorSwallow,
     "no-satisfies": noSatisfies,
-    "no-oxlint-disable": noOxlintDisable
+    "no-oxlint-disable": noOxlintDisable,
+    "no-effect-any": noEffectAny,
+    "no-async-await": noAsyncAwait,
+    "no-raw-date": noRawDate,
+    "no-process": noProcess
   }
 });

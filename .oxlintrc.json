@@ -32,6 +32,53 @@
     "media-diy/no-effect-asvoid": "error",
     "media-diy/no-silent-error-swallow": "error",
     "media-diy/no-satisfies": "error",
-    "media-diy/no-oxlint-disable": "error"
-  }
+    "media-diy/no-oxlint-disable": "error",
+    "media-diy/no-effect-any": "error",
+    "media-diy/no-async-await": "error",
+    "media-diy/no-process": "error"
+  },
+  "overrides": [
+    {
+      "files": ["src/infrastructure/persistence/media-contents.r2.ts"],
+      "rules": {
+        "media-diy/no-process": "off"
+      }
+    },
+    {
+      "files": ["tests/integration/fixtures/stack.ts"],
+      "rules": {
+        "media-diy/no-process": "off"
+      }
+    },
+    {
+      "files": ["tests/integration/presigned-url.integration.test.ts"],
+      "rules": {
+        "media-diy/no-process": "off"
+      }
+    },
+    {
+      "files": ["tests/integration/rpc-smoke.integration.test.ts"],
+      "rules": {
+        "media-diy/no-process": "off"
+      }
+    },
+    {
+      "files": ["tests/integration/search-media.integration.test.ts"],
+      "rules": {
+        "media-diy/no-process": "off"
+      }
+    },
+    {
+      "files": ["tests/integration/fast-scan.integration.test.ts"],
+      "rules": {
+        "media-diy/no-process": "off"
+      }
+    },
+    {
+      "files": ["vitest.config.ts"],
+      "rules": {
+        "media-diy/no-process": "off"
+      }
+    }
+  ]
 }

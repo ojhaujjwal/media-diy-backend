@@ -1,4 +1,4 @@
-import { Effect } from "effect";
+import { Clock, DateTime, Effect } from "effect";
 import { UPLOAD_MEDIA_ERROR_CODE, UploadMediaError } from "../request/upload-media.request.js";
 import { MediaMetadataRepository } from "../../domain/repository/media-metadata.repository.js";
 import type { UploadMediaRequest } from "./rpc-definitions.js";
@@ -43,6 +43,8 @@ export const uploadMediaHandler = ({
       )
     );
 
+    const nowMs = yield* Clock.currentTimeMillis;
+
     yield* mediaMetadataRepository.create({
       originalFileName,
       deviceId,
@@ -55,7 +57,7 @@ export const uploadMediaHandler = ({
       fileMtime,
       exif,
       capturedAt,
-      uploadedAt: new Date(),
+      uploadedAt: DateTime.makeUnsafe(nowMs),
       id,
       ownerUserId
     });

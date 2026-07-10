@@ -22,4 +22,4 @@ export class MediaContentsRepository extends Context.Service<
       filePath: string
     ) => Effect.Effect<string, MediaContentsRepositoryError, never>;
   }
->()("MediaContentsRepository") {}
+>()("ts-starter/domain/repository/media-contents.repository/MediaContentsRepository") {}

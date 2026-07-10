@@ -14,5 +14,5 @@ export class FindMediaResponse extends S.Class<FindMediaResponse>("FindMediaResp
   id: S.String.check(S.isUUID()),
   s3KeyFull: S.String,
   type: S.Enum(MediaType),
-  capturedAt: S.Date
+  capturedAt: S.DateTimeUtc
 }) {}

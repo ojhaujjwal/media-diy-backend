@@ -7,6 +7,8 @@
   "type": "module",
   "scripts": {
     "test": "vitest run",
+    "test:types": "vitest run --typecheck",
+    "test:integration": "INTEGRATION=1 vitest run tests/integration",
     "typecheck": "tsc --noEmit",
     "dev": "alchemy dev",
     "deploy": "alchemy deploy",
@@ -19,16 +21,16 @@
     "prepare": "husky && effect-language-service patch"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.1061.0",
-    "@aws-sdk/s3-request-presigner": "^3.1061.0",
-    "alchemy": "2.0.0-beta.51",
-    "effect": "^4.0.0-beta.76",
+    "alchemy": "2.0.0-beta.57",
+    "effect": "4.0.0-beta.85",
     "fast-check": "^3.18.0"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20260604.1",
+    "@distilled.cloud/cloudflare": "0.26.1",
     "@effect/language-service": "^0.86.2",
-    "@effect/vitest": "^4.0.0-beta.76",
+    "@effect/platform-node": "4.0.0-beta.85",
+    "@effect/vitest": "4.0.0-beta.85",
     "@oxlint/plugins": "^1.68.0",
     "@types/node": "^22.0.0",
     "dotenv": "^17.4.2",
@@ -50,7 +52,8 @@
   "pnpm": {
     "onlyBuiltDependencies": [
       "esbuild",
-      "msgpackr-extract"
+      "msgpackr-extract",
+      "workerd"
     ]
   }
 }

@@ -1,4 +1,4 @@
-import { Effect, Layer } from "effect";
+import { DateTime, Effect, Layer } from "effect";
 import { describe, it, expect } from "@effect/vitest";
 import { searchMediaHandler } from "../../src/http/rpc-handler/search-media.handler.js";
 import {
@@ -16,8 +16,8 @@ const makeMedia = (overrides: Partial<ConstructorParameters<typeof MediaMetadata
     deviceId: "device-001",
     s3KeyFull: "full/photo.jpg",
     ownerUserId: "a208ada0-8862-4ede-b45d-8ec34742bbbd",
-    uploadedAt: new Date("2024-01-15T10:00:00Z"),
-    capturedAt: new Date("2024-01-15T10:00:00Z"),
+    uploadedAt: DateTime.makeUnsafe("2024-01-15T10:00:00Z"),
+    capturedAt: DateTime.makeUnsafe("2024-01-15T10:00:00Z"),
     smbPath: "/smb/photo.jpg",
     fileSize: 1024,
     fileMtime: "2024-01-15T10:00:00Z",
@@ -27,8 +27,8 @@ const makeMedia = (overrides: Partial<ConstructorParameters<typeof MediaMetadata
 const buildMockRepo = (
   searchMedia: (_criteria: {
     readonly ownerUserId: string;
-    readonly dateFrom?: Date;
-    readonly dateTo?: Date;
+    readonly dateFrom?: DateTime.Utc;
+    readonly dateTo?: DateTime.Utc;
     readonly cameraMake?: string;
     readonly cameraModel?: string;
     readonly gpsLatMin?: number;
@@ -143,7 +143,7 @@ describe("SearchMedia", () => {
     Effect.gen(function* () {
       let capturedCriteria: {
         ownerUserId: string;
-        dateFrom?: Date;
+        dateFrom?: DateTime.Utc;
         cameraMake?: string;
       } = { ownerUserId: "" };
       const repo = buildMockRepo((criteria) => {

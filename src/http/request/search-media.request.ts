@@ -14,7 +14,7 @@ export class MediaSummary extends S.Class<MediaSummary>("MediaSummary")({
   s3KeyFull: S.String,
   s3KeyThumb: S.optional(S.String),
   type: S.Enum(MediaType),
-  capturedAt: S.Date,
+  capturedAt: S.DateTimeUtc,
   cameraMake: S.optional(S.String),
   cameraModel: S.optional(S.String)
 }) {}

@@ -1,5 +1,5 @@
 import type { MediaMetadata } from "../../domain/model/media.js";
-import type { Effect } from "effect";
+import type { DateTime, Effect } from "effect";
 import { Context, Schema as S } from "effect";
 
 export type ErrorReason = "UnknownError" | "RecordNotFound";
@@ -31,8 +31,8 @@ export class MediaMetadataRepository extends Context.Service<
 
     readonly searchMedia: (criteria: {
       readonly ownerUserId: string;
-      readonly dateFrom?: Date;
-      readonly dateTo?: Date;
+      readonly dateFrom?: DateTime.Utc;
+      readonly dateTo?: DateTime.Utc;
       readonly cameraMake?: string;
       readonly cameraModel?: string;
       readonly gpsLatMin?: number;
@@ -47,4 +47,4 @@ export class MediaMetadataRepository extends Context.Service<
       never
     >;
   }
->()("MediaMetadataRepository") {}
+>()("ts-starter/domain/repository/media-metadata.repository/MediaMetadataRepository") {}

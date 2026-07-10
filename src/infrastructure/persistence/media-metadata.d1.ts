@@ -1,6 +1,6 @@
 import { RuntimeContext } from "alchemy";
 import * as Cloudflare from "alchemy/Cloudflare";
-import { Effect, Layer, Schema } from "effect";
+import { DateTime, Effect, Layer, Schema } from "effect";
 import {
   MediaMetadataRepository,
   MediaMetadataRepositoryError
@@ -38,17 +38,17 @@ const parseRowSync = (record: Record<string, unknown>): MediaMetadata => {
     s3KeyFull: row.s3_key_full,
     s3KeyThumb: row.s3_key_thumb,
     ownerUserId: row.owner_user_id,
-    uploadedAt: new Date(row.uploaded_at),
-    capturedAt: new Date(row.captured_at),
+    uploadedAt: DateTime.makeUnsafe(row.uploaded_at),
+    capturedAt: DateTime.makeUnsafe(row.captured_at),
     smbPath: row.smb_path,
     fileSize: row.file_size,
     fileMtime: row.file_mtime,
-    exif: row.exif ? Schema.decodeUnknownSync(ExifMetadata)(JSON.parse(row.exif)) : undefined
+    exif: row.exif !== undefined ? Schema.decodeUnknownSync(ExifMetadata)(JSON.parse(row.exif)) : undefined
   });
 };
 
 const parseRow = (row: Record<string, unknown> | null): Effect.Effect<MediaMetadata, MediaMetadataRepositoryError> => {
-  if (!row) {
+  if (row === null) {
     return Effect.fail(
       new MediaMetadataRepositoryError({
         message: "Record not found",
@@ -90,12 +90,12 @@ export const MediaMetadataD1Live = Layer.effect(
             metadata.s3KeyThumb ?? null,
             metadata.ownerUserId,
             metadata.originalFileName,
-            metadata.capturedAt.toISOString(),
-            metadata.uploadedAt.toISOString(),
+            DateTime.formatIso(metadata.capturedAt),
+            DateTime.formatIso(metadata.uploadedAt),
             metadata.smbPath,
             metadata.fileSize,
             metadata.fileMtime,
-            metadata.exif ? JSON.stringify(Schema.encodeSync(ExifMetadata)(metadata.exif)) : null
+            metadata.exif !== undefined ? JSON.stringify(Schema.encodeSync(ExifMetadata)(metadata.exif)) : null
           )
           .run()
           .pipe(Effect.mapError(mapD1Error), Effect.provideService(RuntimeContext, ctx)),
@@ -122,19 +122,19 @@ export const MediaMetadataD1Live = Layer.effect(
           where.push("owner_user_id = ?");
           params.push(criteria.ownerUserId);
 
-          if (criteria.dateFrom) {
+          if (criteria.dateFrom !== undefined) {
             where.push("captured_at >= ?");
-            params.push(criteria.dateFrom.toISOString());
+            params.push(DateTime.formatIso(criteria.dateFrom));
           }
-          if (criteria.dateTo) {
+          if (criteria.dateTo !== undefined) {
             where.push("captured_at <= ?");
-            params.push(criteria.dateTo.toISOString());
+            params.push(DateTime.formatIso(criteria.dateTo));
           }
-          if (criteria.cameraMake) {
+          if (criteria.cameraMake !== undefined) {
             where.push("camera_make = ?");
             params.push(criteria.cameraMake);
           }
-          if (criteria.cameraModel) {
+          if (criteria.cameraModel !== undefined) {
             where.push("camera_model = ?");
             params.push(criteria.cameraModel);
           }
@@ -198,7 +198,7 @@ export const MediaMetadataD1Live = Layer.effect(
 
             for (const row of rows.results) {
               const input = inputLookup.get(row.smb_path);
-              if (input && input.fileSize === row.file_size && input.fileMtime === row.file_mtime) {
+              if (input !== undefined && input.fileSize === row.file_size && input.fileMtime === row.file_mtime) {
                 results.push(row.smb_path);
               }
             }

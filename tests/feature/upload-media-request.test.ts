@@ -1,4 +1,4 @@
-import { Effect, Layer } from "effect";
+import { DateTime, Effect, Layer } from "effect";
 import { describe, it, expect } from "@effect/vitest";
 import { uploadMediaHandler } from "../../src/http/rpc-handler/upload-media.handler.js";
 import {
@@ -47,7 +47,7 @@ describe("UploadMediaRequest", () => {
         deviceId: "device-001",
         s3KeyFull: "/uploads/new-photo.jpg",
         s3KeyThumb: undefined,
-        capturedAt: new Date(),
+        capturedAt: DateTime.nowUnsafe(),
         id: crypto.randomUUID(),
         smbPath: "/smb/photos/new-photo.jpg",
         fileSize: 1024,
@@ -71,8 +71,8 @@ describe("UploadMediaRequest", () => {
                 deviceId: "device-001",
                 s3KeyFull: "/uploads/existing.jpg",
                 ownerUserId: "a208ada0-8862-4ede-b45d-8ec34742bbbd",
-                uploadedAt: new Date(),
-                capturedAt: new Date(),
+                uploadedAt: DateTime.nowUnsafe(),
+                capturedAt: DateTime.nowUnsafe(),
                 smbPath: "/smb/photos/existing.jpg",
                 fileSize: 2048,
                 fileMtime: "2024-01-15T10:30:00Z"
@@ -93,7 +93,7 @@ describe("UploadMediaRequest", () => {
         deviceId: "device-001",
         s3KeyFull: "/uploads/existing.jpg",
         s3KeyThumb: undefined,
-        capturedAt: new Date(),
+        capturedAt: DateTime.nowUnsafe(),
         id,
         smbPath: "/smb/photos/existing.jpg",
         fileSize: 2048,

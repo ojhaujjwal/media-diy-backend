@@ -1,3 +1,4 @@
+// @effect-diagnostics *:off
 import type { ESTree } from "@oxlint/plugins";
 import { defineRule } from "@oxlint/plugins";
 
