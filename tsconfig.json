@@ -42,7 +42,7 @@
           "effectMapFlatten": "error",
           "effectMapVoid": "error",
           "effectSucceedWithVoid": "error",
-          "extendsNativeError": "warn",
+          "extendsNativeError": "error",
           "genericEffectServices": "error",
           "globalConsole": "error",
           "globalConsoleInEffect": "error",
