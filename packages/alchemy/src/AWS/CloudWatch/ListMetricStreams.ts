@@ -1,0 +1,27 @@
+import * as cloudwatch from "@distilled.cloud/aws/cloudwatch";
+import * as Effect from "effect/Effect";
+import * as Binding from "../../Binding.ts";
+
+export interface ListMetricStreamsRequest
+  extends cloudwatch.ListMetricStreamsInput {}
+
+/**
+ * Runtime binding for `cloudwatch:ListMetricStreams`.
+ * @binding
+ */
+export interface ListMetricStreams extends Binding.Service<
+  ListMetricStreams,
+  "AWS.CloudWatch.ListMetricStreams",
+  () => Effect.Effect<
+    (
+      request?: ListMetricStreamsRequest,
+    ) => Effect.Effect<
+      cloudwatch.ListMetricStreamsOutput,
+      cloudwatch.ListMetricStreamsError
+    >
+  >
+> {}
+
+export const ListMetricStreams = Binding.Service<ListMetricStreams>(
+  "AWS.CloudWatch.ListMetricStreams",
+);
