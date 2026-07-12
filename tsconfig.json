@@ -20,13 +20,13 @@
     "noUnusedLocals": true,
     "noImplicitOverride": true,
     "moduleDetection": "force",
-    "types": ["vitest/globals"],
+    "types": ["node", "vitest/globals"],
     "plugins": [
       {
         "name": "@effect/language-service",
         "diagnosticSeverity": {
           "anyUnknownInErrorContext": "error",
-        "asyncFunction": "error",
+          "asyncFunction": "error",
           "catchUnfailableEffect": "error",
           "catchAllToMapError": "error",
           "cryptoRandomUUID": "off",

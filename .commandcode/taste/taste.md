@@ -10,3 +10,7 @@
 
 # workflow
 - Don't disable lint/diagnostic rules to work around tooling bugs; investigate and fix the root cause instead. Confidence: 0.70
+
+# effect
+- Use Effect's native HTTP client instead of `fetch()` for HTTP requests in Effect-based projects. Confidence: 0.65
+- Use Effect's `Random` service instead of `Math.random()` for randomness. Confidence: 0.70
